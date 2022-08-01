@@ -1,0 +1,3 @@
+[submodule "extern/solver"]
+	path = extern/solver
+	url = https://github.com/ratioSolver/oRatio
