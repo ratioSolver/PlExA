@@ -81,7 +81,7 @@ namespace ratio::executor
     const semitone::rational units_per_tick;                                                  // the number of plan units for each tick..
     semitone::lit xi;                                                                         // the execution variable..
     std::unordered_map<const ratio::core::atom *, atom_adaptation> adaptations;               // for each atom, the numeric adaptations done during the executions (i.e., freezes and delays)..
-    std::unordered_map<semitone::var, ratio::core::atom *> all_atoms;                         // all the interesting atoms indexed by their sigma_xi variable..
+    std::unordered_map<semitone::var, const ratio::core::atom *> all_atoms;                   // all the interesting atoms indexed by their sigma_xi variable..
     std::unordered_map<const ratio::core::atom *, semitone::rational> dont_start;             // the starting atoms which are not yet ready to start..
     std::unordered_map<const ratio::core::atom *, semitone::rational> dont_end;               // the ending atoms which are not yet ready to end..
     std::map<semitone::inf_rational, std::unordered_set<ratio::core::atom *>> s_atms, e_atms; // for each pulse, the atoms starting/ending at that pulse..

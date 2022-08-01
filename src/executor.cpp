@@ -35,7 +35,7 @@ namespace ratio::executor
                 for (const auto &atm : starting_atms->second)
                     if (const auto at_atm = dont_start.find(atm); at_atm != dont_start.end())
                     { // this starting atom is not ready to be started..
-                        const auto &xpr = static_cast<ratio::core::arith_item &>(slv.is_impulse(*atm) ? *atm->get(RATIO_AT) : *atm->get(RATIO_START));
+                        auto &xpr = static_cast<ratio::core::arith_item &>(slv.is_impulse(*atm) ? *atm->get(RATIO_AT) : *atm->get(RATIO_START));
                         if (slv.is_constant(xpr))
                             throw execution_exception(); // we can't delay constants..
                         const auto lb = slv.arith_value(xpr) + (units_per_tick > at_atm->second ? units_per_tick : at_atm->second);
@@ -63,7 +63,7 @@ namespace ratio::executor
                 for (const auto &atm : ending_atms->second)
                     if (const auto at_atm = dont_end.find(atm); at_atm != dont_end.end())
                     { // this ending atom is not ready to be ended..
-                        const auto &xpr = static_cast<ratio::core::arith_item &>(slv.is_impulse(*atm) ? *atm->get(RATIO_AT) : *atm->get(RATIO_END));
+                        auto &xpr = static_cast<ratio::core::arith_item &>(slv.is_impulse(*atm) ? *atm->get(RATIO_AT) : *atm->get(RATIO_END));
                         if (slv.is_constant(xpr))
                             throw execution_exception(); // we can't delay constants
                         const auto lb = slv.arith_value(xpr) + (units_per_tick > at_atm->second ? units_per_tick : at_atm->second);
@@ -264,11 +264,11 @@ namespace ratio::executor
         if (const auto af = dynamic_cast<const ratio::solver::atom_flaw *>(&f))
         { // we create an adaptation for adapting the atom at execution time..
             const auto &atm = af->get_atom();
-            all_atoms.emplace(get_sigma(slv, atm), &atm);
-            // we bind the sigma variable for propagating the bounds..
-            bind(get_sigma(slv, atm));
             // we create a new variable for propagating the execution constraints..
             const auto sigma_xi = slv.get_sat_core()->new_var();
+            // we bind the sigma variable for propagating the bounds..
+            bind(sigma_xi);
+            all_atoms.emplace(sigma_xi, &atm);
             // either the atom is not active, or the xi variable is false, or the execution bounds must be enforced..
             [[maybe_unused]] bool nc = slv.get_sat_core()->new_clause({semitone::lit(get_sigma(slv, atm), false), !xi, semitone::lit(sigma_xi)});
             assert(nc);
