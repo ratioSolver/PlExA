@@ -17,7 +17,7 @@ find_package(Threads REQUIRED)
 include(CTest)
 enable_testing()
 
-SET(BUILD_LISTENERS TRUE CACHE BOOL "Builds the solver's listeners" FORCE)
+set(BUILD_LISTENERS ON CACHE BOOL "Builds the listeners" FORCE)
 
 add_subdirectory(extern/solver)
 
