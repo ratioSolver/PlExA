@@ -136,7 +136,7 @@ namespace ratio::executor
                     l->start(starting_atms->second);
             }
             if (const auto ending_atms = e_atms.find(*pulses.cbegin()); ending_atms != e_atms.cend())
-            { // we freeze the 'at' and the 'end' of the ending atoms..
+            { // we freeze the `at` and the `end` of the ending atoms..
                 for (auto &atm : ending_atms->second)
                     if (slv.is_impulse(*atm))
                     { // we have an impulsive atom..
