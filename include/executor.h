@@ -53,7 +53,7 @@ namespace ratio::executor
 
     PLEXA_EXPORT void dont_start_yet(const std::unordered_map<const ratio::core::atom *, semitone::rational> &atoms) { dont_start.insert(atoms.cbegin(), atoms.cend()); }
     PLEXA_EXPORT void dont_end_yet(const std::unordered_map<const ratio::core::atom *, semitone::rational> &atoms) { dont_end.insert(atoms.cbegin(), atoms.cend()); }
-    PLEXA_EXPORT void failure(const std::unordered_set<ratio::core::atom *> &atoms);
+    PLEXA_EXPORT void failure(const std::unordered_set<const ratio::core::atom *> &atoms);
 
   private:
     bool propagate(const semitone::lit &p) noexcept override;

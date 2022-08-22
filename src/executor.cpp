@@ -202,7 +202,7 @@ namespace ratio::executor
             l->tick(current_time);
     }
 
-    PLEXA_EXPORT void executor::failure(const std::unordered_set<ratio::core::atom *> &atoms)
+    PLEXA_EXPORT void executor::failure(const std::unordered_set<const ratio::core::atom *> &atoms)
     {
         for (const auto &atm : atoms)
             cnfl.push_back(semitone::lit(get_sigma(slv, *atm), false));
