@@ -36,7 +36,7 @@ namespace ratio::executor
     virtual void ending(const std::unordered_set<ratio::core::atom *> &) {}
     virtual void end(const std::unordered_set<ratio::core::atom *> &) {}
 
-  private:
+  protected:
     executor &exec;
   };
 } // namespace ratio::executor
