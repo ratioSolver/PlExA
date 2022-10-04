@@ -27,7 +27,7 @@ file(GLOB EXEC_HEADERS include/*.h)
 add_library(${PROJECT_NAME} SHARED ${EXEC_SOURCES})
 GENERATE_EXPORT_HEADER(${PROJECT_NAME})
 target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>/include $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}> $<INSTALL_INTERFACE:>)
-target_link_libraries(${PROJECT_NAME} PRIVATE oRatio ratioCore RiDDLe SeMiTONE json)
+target_link_libraries(${PROJECT_NAME} PRIVATE oRatioSolver ratioCore RiDDLe SeMiTONE json)
 
 if(MSVC)
     target_compile_options(${PROJECT_NAME} PRIVATE /W4)
@@ -38,6 +38,7 @@ endif()
 install(
     TARGETS ${PROJECT_NAME}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 install(
     FILES ${EXEC_HEADERS} ${CMAKE_CURRENT_BINARY_DIR}/plexa_export.h
