@@ -49,7 +49,12 @@ namespace ratio::executor
     PLEXA_EXPORT const semitone::rational &get_current_time() const { return current_time; };
     PLEXA_EXPORT const semitone::rational &get_units_per_tick() const { return units_per_tick; };
 
+    PLEXA_EXPORT bool is_adapting() const { return pending_requirements; };
+
     PLEXA_EXPORT void tick();
+
+    PLEXA_EXPORT void adapt(const std::string &script);
+    PLEXA_EXPORT void adapt(const std::vector<std::string> &files);
 
     PLEXA_EXPORT void dont_start_yet(const std::unordered_map<const ratio::core::atom *, semitone::rational> &atoms) { dont_start.insert(atoms.cbegin(), atoms.cend()); }
     PLEXA_EXPORT void dont_end_yet(const std::unordered_map<const ratio::core::atom *, semitone::rational> &atoms) { dont_end.insert(atoms.cbegin(), atoms.cend()); }
@@ -80,6 +85,7 @@ namespace ratio::executor
     semitone::rational current_time;                                                          // the current time in plan units..
     const semitone::rational units_per_tick;                                                  // the number of plan units for each tick..
     semitone::lit xi;                                                                         // the execution variable..
+    bool pending_requirements = false;                                                        // whether there are pending requirements to be solved or not..
     std::unordered_map<const ratio::core::atom *, atom_adaptation> adaptations;               // for each atom, the numeric adaptations done during the executions (i.e., freezes and delays)..
     std::unordered_map<semitone::var, const ratio::core::atom *> all_atoms;                   // all the interesting atoms indexed by their sigma_xi variable..
     std::unordered_map<const ratio::core::atom *, semitone::rational> dont_start;             // the starting atoms which are not yet ready to start..

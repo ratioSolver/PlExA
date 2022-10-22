@@ -18,6 +18,13 @@ namespace ratio::executor
     PLEXA_EXPORT void executor::tick()
     {
         LOG("current time: " << to_string(current_time));
+
+        if (pending_requirements)
+        { // we solve the problem again..
+            slv.solve();
+            pending_requirements = false;
+        }
+
     manage_tick:
         while (!pulses.empty() && *pulses.cbegin() <= current_time)
         { // we have something to do..
@@ -200,6 +207,26 @@ namespace ratio::executor
         // we notify that a tick has arised..
         for (const auto &l : listeners)
             l->tick(current_time);
+
+        auto horizon = slv.ratio::core::env::get("horizon");
+        if (slv.ratio::core::core::arith_value(horizon) <= current_time && dont_end.empty()) // we notify that there are no more planned tasks to be executed..
+            for (const auto &l : listeners)
+                l->finished();
+    }
+
+    PLEXA_EXPORT void executor::adapt(const std::string &script)
+    {
+        while (!slv.root_level()) // we go at root level..
+            slv.get_sat_core()->pop();
+        slv.read(script);
+        pending_requirements = true;
+    }
+    PLEXA_EXPORT void executor::adapt(const std::vector<std::string> &files)
+    {
+        while (!slv.root_level()) // we go at root level..
+            slv.get_sat_core()->pop();
+        slv.read(files);
+        pending_requirements = true;
     }
 
     PLEXA_EXPORT void executor::failure(const std::unordered_set<const ratio::core::atom *> &atoms)
