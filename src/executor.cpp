@@ -278,6 +278,11 @@ namespace ratio::executor
             break;
         }
         build_timelines();
+
+        auto horizon = slv.ratio::core::env::get("horizon");
+        if (slv.ratio::core::core::arith_value(horizon) <= current_time && dont_end.empty()) // we notify that there are no more planned tasks to be executed..
+            for (const auto &l : listeners)
+                l->finished();
     }
     void executor::inconsistent_problem()
     {
