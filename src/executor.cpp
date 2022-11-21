@@ -9,21 +9,47 @@
 
 namespace ratio::executor
 {
-    PLEXA_EXPORT executor::executor(ratio::solver::solver &slv, const semitone::rational &units_per_tick) : core_listener(slv), solver_listener(slv), semitone::theory(slv.get_sat_core()), units_per_tick(units_per_tick), xi(slv.get_sat_core()->new_var())
+    PLEXA_EXPORT executor::executor(ratio::solver::solver &slv, std::mutex *mtx, const semitone::rational &units_per_tick) : core_listener(slv), solver_listener(slv), semitone::theory(slv.get_sat_core()), mtx(mtx), units_per_tick(units_per_tick), xi(slv.get_sat_core()->new_var())
     {
         bind(variable(xi));
         build_timelines();
     }
 
+    PLEXA_EXPORT void executor::start_execution()
+    {
+        if (mtx)
+            mtx->lock();
+        executing = true;
+        if (mtx)
+            mtx->unlock();
+    }
+    PLEXA_EXPORT void executor::pause_execution()
+    {
+        if (mtx)
+            mtx->lock();
+        executing = false;
+        if (mtx)
+            mtx->unlock();
+    }
+
     PLEXA_EXPORT void executor::tick()
     {
-        LOG("current time: " << to_string(current_time));
-
+        if (mtx)
+            mtx->lock();
         if (pending_requirements)
         { // we solve the problem again..
             slv.solve();
             pending_requirements = false;
         }
+
+        if (!executing)
+        {
+            if (mtx)
+                mtx->unlock();
+            return;
+        }
+
+        LOG("current time: " << to_string(current_time));
 
     manage_tick:
         while (!pulses.empty() && *pulses.cbegin() <= current_time)
@@ -212,21 +238,32 @@ namespace ratio::executor
         if (slv.ratio::core::core::arith_value(horizon) <= current_time && dont_end.empty()) // we notify that there are no more planned tasks to be executed..
             for (const auto &l : listeners)
                 l->finished();
+
+        if (mtx)
+            mtx->unlock();
     }
 
     PLEXA_EXPORT void executor::adapt(const std::string &script)
     {
+        if (mtx)
+            mtx->lock();
         while (!slv.root_level()) // we go at root level..
             slv.get_sat_core()->pop();
         slv.read(script);
         pending_requirements = true;
+        if (mtx)
+            mtx->unlock();
     }
     PLEXA_EXPORT void executor::adapt(const std::vector<std::string> &files)
     {
+        if (mtx)
+            mtx->lock();
         while (!slv.root_level()) // we go at root level..
             slv.get_sat_core()->pop();
         slv.read(files);
         pending_requirements = true;
+        if (mtx)
+            mtx->unlock();
     }
 
     PLEXA_EXPORT void executor::failure(const std::unordered_set<const ratio::core::atom *> &atoms)
