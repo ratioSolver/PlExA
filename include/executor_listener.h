@@ -36,12 +36,6 @@ namespace ratio::executor
     virtual void ending(const std::unordered_set<ratio::core::atom *> &) {}
     virtual void end(const std::unordered_set<ratio::core::atom *> &) {}
 
-    /**
-     * @brief Notifies the listener that there are no more activities to be executed.
-     *
-     */
-    virtual void finished() {}
-
   protected:
     executor &exec;
   };

@@ -234,11 +234,6 @@ namespace ratio::executor
         for (const auto &l : listeners)
             l->tick(current_time);
 
-        auto horizon = slv.ratio::core::env::get("horizon");
-        if (slv.ratio::core::core::arith_value(horizon) <= current_time && dont_end.empty()) // we notify that there are no more planned tasks to be executed..
-            for (const auto &l : listeners)
-                l->finished();
-
         if (mtx)
             mtx->unlock();
     }
@@ -268,11 +263,19 @@ namespace ratio::executor
 
     PLEXA_EXPORT void executor::failure(const std::unordered_set<const ratio::core::atom *> &atoms)
     {
+        if (mtx)
+            mtx->lock();
         for (const auto &atm : atoms)
             cnfl.push_back(semitone::lit(get_sigma(slv, *atm), false));
         // we backtrack to a level at which we can analyze the conflict..
         if (!backtrack_analyze_and_backjump() || !slv.solve())
+        {
+            if (mtx)
+                mtx->unlock();
             throw execution_exception();
+        }
+        if (mtx)
+            mtx->unlock();
     }
 
     bool executor::propagate(const semitone::lit &p) noexcept
@@ -315,11 +318,6 @@ namespace ratio::executor
             break;
         }
         build_timelines();
-
-        auto horizon = slv.ratio::core::env::get("horizon");
-        if (slv.ratio::core::core::arith_value(horizon) <= current_time && dont_end.empty()) // we notify that there are no more planned tasks to be executed..
-            for (const auto &l : listeners)
-                l->finished();
     }
     void executor::inconsistent_problem()
     {

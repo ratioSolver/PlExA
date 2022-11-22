@@ -50,12 +50,38 @@ namespace ratio::executor
     PLEXA_EXPORT const semitone::rational &get_current_time() const { return current_time; };
     PLEXA_EXPORT const semitone::rational &get_units_per_tick() const { return units_per_tick; };
 
+    /**
+     * @brief Checks whether the current solution is being executed.
+     *
+     * @return true if the current solution is being executed.
+     * @return false if the current solution is paused.
+     */
     bool is_executing() const { return executing; }
+
+    /**
+     * @brief Starts the execution of the current solution.
+     *
+     */
     PLEXA_EXPORT void start_execution();
+    /**
+     * @brief Pauses the execution of the current solution.
+     *
+     */
     PLEXA_EXPORT void pause_execution();
 
-    PLEXA_EXPORT bool is_adapting() const { return pending_requirements; };
+    /**
+     * @brief Checks whether there are task to be executed in the future.
+     *
+     * @return true if there is some task to be executed in the future.
+     * @return false if there are no tasks to be executed in the future.
+     */
+    bool is_finished() const { return slv.ratio::core::core::arith_value(slv.ratio::core::env::get("horizon")) <= current_time && dont_end.empty(); }
 
+    /**
+     * @brief Performs a single execution step, increasing the current time of a `units_per_tick` amount, starting (ending) any task which starts (ends) between the `current_time` and `current_time + units_per_tick`.
+     *
+     * Before starting (ending) the execution of a task, the executor notifies the listeners via the `starting` (`ending`) methods. Listeners can here introduce delays through the `dont_start_yet` (`dont_end_yet`) methods.
+     */
     PLEXA_EXPORT void tick();
 
     PLEXA_EXPORT void adapt(const std::string &script);
