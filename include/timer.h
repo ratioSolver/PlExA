@@ -11,7 +11,13 @@ namespace ratio::time
   public:
     timer(const size_t &tick_dur, std::function<void(void)> f);
 
+    /**
+     * @brief Starts the timer.
+     */
     void start();
+    /**
+     * @brief Stops the timer.
+     */
     void stop();
 
   private:

@@ -43,12 +43,29 @@ namespace ratio::executor
     friend class executor_listener;
 
   public:
+    /**
+     * @brief Construct a new executor object.
+     *
+     * @param slv the solver maintaining the solution to execute.
+     * @param mtx the mutex to use to synchronize the execution of the executor with the solver.
+     * @param units_per_tick the amount of units to increase the current time at each tick.
+     */
     PLEXA_EXPORT executor(ratio::solver::solver &slv, std::mutex *mtx = nullptr, const semitone::rational &units_per_tick = semitone::rational::ONE);
     executor(const executor &orig) = delete;
 
     ratio::solver::solver &get_solver() { return slv; }
-    PLEXA_EXPORT const semitone::rational &get_current_time() const { return current_time; };
-    PLEXA_EXPORT const semitone::rational &get_units_per_tick() const { return units_per_tick; };
+    /**
+     * @brief Gets the current time.
+     *
+     * @return const semitone::rational& the current time.
+     */
+    const semitone::rational &get_current_time() const { return current_time; };
+    /**
+     * @brief Gets the amount of units to increase the current time at each tick.
+     *
+     * @return const semitone::rational& the amount of units to increase the current time at each tick.
+     */
+    const semitone::rational &get_units_per_tick() const { return units_per_tick; };
 
     /**
      * @brief Checks whether the current solution is being executed.
