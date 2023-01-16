@@ -54,6 +54,8 @@ namespace ratio::executor
     executor(const executor &orig) = delete;
 
     ratio::solver::solver &get_solver() { return slv; }
+    const ratio::solver::solver &get_solver() const { return slv; }
+
     /**
      * @brief Gets the current time.
      *

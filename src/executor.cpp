@@ -9,7 +9,7 @@
 
 namespace ratio::executor
 {
-    PLEXA_EXPORT executor::executor(ratio::solver::solver &slv, std::mutex *mtx, const semitone::rational &units_per_tick) : core_listener(slv), solver_listener(slv), semitone::theory(slv.get_sat_core()), mtx(mtx), units_per_tick(units_per_tick), xi(slv.get_sat_core()->new_var())
+    PLEXA_EXPORT executor::executor(ratio::solver::solver &slv, std::mutex *mtx, const semitone::rational &units_per_tick) : core_listener(slv), solver_listener(slv), semitone::theory(slv.get_sat_core_ptr()), mtx(mtx), units_per_tick(units_per_tick), xi(slv.get_sat_core().new_var())
     {
         bind(variable(xi));
         build_timelines();
@@ -123,7 +123,7 @@ namespace ratio::executor
 
             if (delays)
             { // we have some delays: we propagate and remove new possible flaws..
-                if (!slv.get_sat_core()->propagate() || !slv.solve())
+                if (!slv.get_sat_core().propagate() || !slv.solve())
                     throw execution_exception();
                 goto manage_tick;
             }
@@ -137,8 +137,8 @@ namespace ratio::executor
                             auto *itm = &*xpr;
                             if (const auto bi = dynamic_cast<const ratio::core::bool_item *>(itm))
                             { // we store the propositional value..
-                                assert(slv.get_sat_core()->value(bi->get_value()) != semitone::Undefined);
-                                adaptations.at(atm).bounds.emplace(itm, std::make_unique<atom_adaptation::bool_bounds>(slv.get_sat_core()->value(bi->get_value())));
+                                assert(slv.get_sat_core().value(bi->get_value()) != semitone::Undefined);
+                                adaptations.at(atm).bounds.emplace(itm, std::make_unique<atom_adaptation::bool_bounds>(slv.get_sat_core().value(bi->get_value())));
                             }
                             else if (const auto ai = dynamic_cast<const ratio::core::arith_item *>(itm))
                             { // we store the arithmetic value and, if not a constant, we propagate also the bounds..
@@ -243,7 +243,7 @@ namespace ratio::executor
         if (mtx)
             mtx->lock();
         while (!slv.root_level()) // we go at root level..
-            slv.get_sat_core()->pop();
+            slv.get_sat_core().pop();
         slv.read(script);
         pending_requirements = true;
         if (mtx)
@@ -254,7 +254,7 @@ namespace ratio::executor
         if (mtx)
             mtx->lock();
         while (!slv.root_level()) // we go at root level..
-            slv.get_sat_core()->pop();
+            slv.get_sat_core().pop();
         slv.read(files);
         pending_requirements = true;
         if (mtx)
@@ -283,12 +283,12 @@ namespace ratio::executor
         if (p == xi)
         { // we propagate the active bounds..
             for (const auto &adapt : adaptations)
-                if (slv.get_sat_core()->value(adapt.second.sigma_xi) == semitone::True)
+                if (slv.get_sat_core().value(adapt.second.sigma_xi) == semitone::True)
                     for (const auto &bnds : adapt.second.bounds)
                         if (!propagate_bounds(*bnds.first, *bnds.second, adapt.second.sigma_xi))
                             return false;
         }
-        else if (slv.get_sat_core()->value(variable(p)) == semitone::True)
+        else if (slv.get_sat_core().value(variable(p)) == semitone::True)
         { // an atom has been activated..
             const auto atm = all_atoms.at(variable(p));
             const auto &adapt = adaptations.at(atm);
@@ -301,7 +301,7 @@ namespace ratio::executor
 
     void executor::solution_found()
     {
-        switch (slv.get_sat_core()->value(xi))
+        switch (slv.get_sat_core().value(xi))
         {
         case semitone::False: // the plan can't be executed anymore..
             throw execution_exception();
@@ -309,7 +309,7 @@ namespace ratio::executor
             slv.take_decision(xi);
             break;
         }
-        switch (slv.get_sat_core()->value(xi))
+        switch (slv.get_sat_core().value(xi))
         {
         case semitone::False: // the plan can't be executed anymore..
             throw execution_exception();
@@ -332,12 +332,12 @@ namespace ratio::executor
         { // we create an adaptation for adapting the atom at execution time..
             const auto &atm = af->get_atom();
             // we create a new variable for propagating the execution constraints..
-            const auto sigma_xi = slv.get_sat_core()->new_var();
+            const auto sigma_xi = slv.get_sat_core().new_var();
             // we bind the sigma variable for propagating the bounds..
             bind(sigma_xi);
             all_atoms.emplace(sigma_xi, &atm);
             // either the atom is not active, or the xi variable is false, or the execution bounds must be enforced..
-            [[maybe_unused]] bool nc = slv.get_sat_core()->new_clause({semitone::lit(get_sigma(slv, atm), false), !xi, semitone::lit(sigma_xi)});
+            [[maybe_unused]] bool nc = slv.get_sat_core().new_clause({semitone::lit(get_sigma(slv, atm), false), !xi, semitone::lit(sigma_xi)});
             assert(nc);
             adaptations.emplace(&atm, semitone::lit(sigma_xi));
         }
@@ -355,7 +355,7 @@ namespace ratio::executor
             for (const auto &atm : pred->get_instances())
             {
                 auto &c_atm = static_cast<ratio::core::atom &>(*atm);
-                if (slv.get_sat_core()->value(get_sigma(slv, c_atm)) == semitone::True)
+                if (slv.get_sat_core().value(get_sigma(slv, c_atm)) == semitone::True)
                 { // the atom is active..
                     if (slv.is_impulse(c_atm))
                     {
@@ -389,7 +389,7 @@ namespace ratio::executor
         if (const auto ba = dynamic_cast<const atom_adaptation::bool_bounds *>(&bounds))
         {
             const auto var = static_cast<const ratio::core::bool_item *>(&itm)->get_value();
-            const auto val = slv.get_sat_core()->value(var);
+            const auto val = slv.get_sat_core().value(var);
             if (val == semitone::Undefined)
                 record({var, !reason});
             else if (val != ba->val)
