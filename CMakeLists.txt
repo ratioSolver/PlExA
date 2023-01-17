@@ -33,7 +33,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE oRatioSolver ratioCore RiDDLe SeMi
 
 message(STATUS "Multiple executors:     ${MULTIPLE_EXECUTORS}")
 if(MULTIPLE_EXECUTORS)
-    target_compile_definitions(${PROJECT_NAME} PRIVATE MULTIPLE_EXECUTORS)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC MULTIPLE_EXECUTORS)
 endif()
 
 if(MSVC)
