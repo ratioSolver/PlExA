@@ -9,7 +9,7 @@
 
 namespace ratio::executor
 {
-    PLEXA_EXPORT executor::executor(ratio::solver::solver &slv, std::mutex *mtx, const semitone::rational &units_per_tick) : core_listener(slv), solver_listener(slv), semitone::theory(slv.get_sat_core_ptr()), mtx(mtx), units_per_tick(units_per_tick), xi(slv.get_sat_core().new_var())
+    PLEXA_EXPORT executor::executor(ratio::solver::solver &slv, const semitone::rational &units_per_tick) : core_listener(slv), solver_listener(slv), semitone::theory(slv.get_sat_core_ptr()), units_per_tick(units_per_tick), xi(slv.get_sat_core().new_var())
     {
         bind(variable(xi));
         build_timelines();
@@ -17,25 +17,24 @@ namespace ratio::executor
 
     PLEXA_EXPORT void executor::start_execution()
     {
-        if (mtx)
-            mtx->lock();
+#ifdef MULTIPLE_EXECUTORS
+        const std::lock_guard<std::mutex> lock(mtx);
+#endif
         executing = true;
-        if (mtx)
-            mtx->unlock();
     }
     PLEXA_EXPORT void executor::pause_execution()
     {
-        if (mtx)
-            mtx->lock();
+#ifdef MULTIPLE_EXECUTORS
+        const std::lock_guard<std::mutex> lock(mtx);
+#endif
         executing = false;
-        if (mtx)
-            mtx->unlock();
     }
 
     PLEXA_EXPORT void executor::tick()
     {
-        if (mtx)
-            mtx->lock();
+#ifdef MULTIPLE_EXECUTORS
+        const std::lock_guard<std::mutex> lock(mtx);
+#endif
         if (pending_requirements)
         { // we solve the problem again..
             slv.solve();
@@ -43,11 +42,7 @@ namespace ratio::executor
         }
 
         if (!executing)
-        {
-            if (mtx)
-                mtx->unlock();
             return;
-        }
 
         LOG("current time: " << to_string(current_time));
 
@@ -233,49 +228,39 @@ namespace ratio::executor
         // we notify that a tick has arised..
         for (const auto &l : listeners)
             l->tick(current_time);
-
-        if (mtx)
-            mtx->unlock();
     }
 
     PLEXA_EXPORT void executor::adapt(const std::string &script)
     {
-        if (mtx)
-            mtx->lock();
+#ifdef MULTIPLE_EXECUTORS
+        const std::lock_guard<std::mutex> lock(mtx);
+#endif
         while (!slv.root_level()) // we go at root level..
             slv.get_sat_core().pop();
         slv.read(script);
         pending_requirements = true;
-        if (mtx)
-            mtx->unlock();
     }
     PLEXA_EXPORT void executor::adapt(const std::vector<std::string> &files)
     {
-        if (mtx)
-            mtx->lock();
+#ifdef MULTIPLE_EXECUTORS
+        const std::lock_guard<std::mutex> lock(mtx);
+#endif
         while (!slv.root_level()) // we go at root level..
             slv.get_sat_core().pop();
         slv.read(files);
         pending_requirements = true;
-        if (mtx)
-            mtx->unlock();
     }
 
     PLEXA_EXPORT void executor::failure(const std::unordered_set<const ratio::core::atom *> &atoms)
     {
-        if (mtx)
-            mtx->lock();
+#ifdef MULTIPLE_EXECUTORS
+        const std::lock_guard<std::mutex> lock(mtx);
+#endif
         for (const auto &atm : atoms)
             cnfl.push_back(semitone::lit(get_sigma(slv, *atm), false));
         // we backtrack to a level at which we can analyze the conflict..
         if (!backtrack_analyze_and_backjump() || !slv.solve())
-        {
-            if (mtx)
-                mtx->unlock();
             throw execution_exception();
-        }
-        if (mtx)
-            mtx->unlock();
     }
 
     bool executor::propagate(const semitone::lit &p) noexcept

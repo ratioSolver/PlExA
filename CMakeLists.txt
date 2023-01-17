@@ -17,6 +17,8 @@ find_package(Threads REQUIRED)
 include(CTest)
 enable_testing()
 
+option(MULTIPLE_EXECUTORS "Allows different executors" OFF)
+
 set(BUILD_LISTENERS ON CACHE BOOL "Builds the listeners" FORCE)
 
 add_subdirectory(extern/solver)
@@ -28,6 +30,11 @@ add_library(${PROJECT_NAME} SHARED ${EXEC_SOURCES})
 GENERATE_EXPORT_HEADER(${PROJECT_NAME})
 target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>/include $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}> $<INSTALL_INTERFACE:>)
 target_link_libraries(${PROJECT_NAME} PRIVATE oRatioSolver ratioCore RiDDLe SeMiTONE json)
+
+message(STATUS "Multiple executors:     ${MULTIPLE_EXECUTORS}")
+if(MULTIPLE_EXECUTORS)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE MULTIPLE_EXECUTORS)
+endif()
 
 if(MSVC)
     target_compile_options(${PROJECT_NAME} PRIVATE /W4)

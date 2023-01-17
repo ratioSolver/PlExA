@@ -47,10 +47,9 @@ namespace ratio::executor
      * @brief Construct a new executor object.
      *
      * @param slv the solver maintaining the solution to execute.
-     * @param mtx the mutex to use to synchronize the execution of the executor with the solver.
      * @param units_per_tick the amount of units to increase the current time at each tick.
      */
-    PLEXA_EXPORT executor(ratio::solver::solver &slv, std::mutex *mtx = nullptr, const semitone::rational &units_per_tick = semitone::rational::ONE);
+    PLEXA_EXPORT executor(ratio::solver::solver &slv, const semitone::rational &units_per_tick = semitone::rational::ONE);
     executor(const executor &orig) = delete;
 
     ratio::solver::solver &get_solver() { return slv; }
@@ -131,7 +130,9 @@ namespace ratio::executor
     void reset_relevant_predicates();
 
   private:
-    std::mutex *mtx;                                                                          // the mutex for the critical sections..
+#ifdef MULTIPLE_EXECUTORS
+    std::mutex mtx; // the mutex for the critical sections..
+#endif
     std::unordered_set<const ratio::core::predicate *> relevant_predicates;                   // impulses and intervals..
     semitone::rational current_time;                                                          // the current time in plan units..
     const semitone::rational units_per_tick;                                                  // the number of plan units for each tick..
