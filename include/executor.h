@@ -4,7 +4,10 @@
 #include "core_listener.h"
 #include "solver_listener.h"
 #include "solver.h"
+#ifdef MULTIPLE_EXECUTORS
 #include <mutex>
+#include <atomic>
+#endif
 
 namespace ratio::executor
 {
@@ -80,12 +83,12 @@ namespace ratio::executor
      * @brief Starts the execution of the current solution.
      *
      */
-    PLEXA_EXPORT void start_execution();
+    void start_execution() { executing = true; }
     /**
      * @brief Pauses the execution of the current solution.
      *
      */
-    PLEXA_EXPORT void pause_execution();
+    void pause_execution() { executing = false; }
 
     /**
      * @brief Checks whether there are task to be executed in the future.
@@ -130,15 +133,17 @@ namespace ratio::executor
     void reset_relevant_predicates();
 
   private:
+    std::unordered_set<const ratio::core::predicate *> relevant_predicates; // impulses and intervals..
+    semitone::rational current_time;                                        // the current time in plan units..
+    const semitone::rational units_per_tick;                                // the number of plan units for each tick..
+    semitone::lit xi;                                                       // the execution variable..
+    bool pending_requirements = false;                                      // whether there are pending requirements to be solved or not..
 #ifdef MULTIPLE_EXECUTORS
-    std::mutex mtx; // the mutex for the critical sections..
+    std::mutex mtx;                      // the mutex for the critical sections..
+    std::atomic<bool> executing = false; // the execution state..
+#else
+    bool executing = false; // the execution state..
 #endif
-    std::unordered_set<const ratio::core::predicate *> relevant_predicates;                   // impulses and intervals..
-    semitone::rational current_time;                                                          // the current time in plan units..
-    const semitone::rational units_per_tick;                                                  // the number of plan units for each tick..
-    semitone::lit xi;                                                                         // the execution variable..
-    bool pending_requirements = false;                                                        // whether there are pending requirements to be solved or not..
-    bool executing = false;                                                                   // the execution state..
     std::unordered_map<const ratio::core::atom *, atom_adaptation> adaptations;               // for each atom, the numeric adaptations done during the executions (i.e., freezes and delays)..
     std::unordered_map<semitone::var, const ratio::core::atom *> all_atoms;                   // all the interesting atoms indexed by their sigma_xi variable..
     std::unordered_map<const ratio::core::atom *, semitone::rational> dont_start;             // the starting atoms which are not yet ready to start..

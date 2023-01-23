@@ -15,21 +15,6 @@ namespace ratio::executor
         build_timelines();
     }
 
-    PLEXA_EXPORT void executor::start_execution()
-    {
-#ifdef MULTIPLE_EXECUTORS
-        const std::lock_guard<std::mutex> lock(mtx);
-#endif
-        executing = true;
-    }
-    PLEXA_EXPORT void executor::pause_execution()
-    {
-#ifdef MULTIPLE_EXECUTORS
-        const std::lock_guard<std::mutex> lock(mtx);
-#endif
-        executing = false;
-    }
-
     PLEXA_EXPORT void executor::tick()
     {
 #ifdef MULTIPLE_EXECUTORS
