@@ -309,7 +309,18 @@ namespace ratio::executor
             // either the atom is not active, or the xi variable is false, or the execution bounds must be enforced..
             [[maybe_unused]] bool nc = slv.get_sat_core().new_clause({semitone::lit(get_sigma(slv, atm), false), !xi, semitone::lit(sigma_xi)});
             assert(nc);
-            adaptations.emplace(&atm, semitone::lit(sigma_xi));
+            auto [at_adapt, added] = adaptations.emplace(&atm, semitone::lit(sigma_xi));
+
+            if (f.get_solver().is_impulse(atm))
+            { // we create a new adaptation for the impulse atom..
+                auto &xpr = static_cast<ratio::core::arith_item &>(*atm.get(RATIO_AT));
+                at_adapt->second.bounds.emplace(&xpr, std::make_unique<atom_adaptation::arith_bounds>(semitone::inf_rational(current_time), semitone::inf_rational(semitone::rational::POSITIVE_INFINITY)));
+            }
+            else if (f.get_solver().is_interval(atm))
+            { // we create a new adaptation for the interval atom..
+                auto &xpr = static_cast<ratio::core::arith_item &>(*atm.get(RATIO_START));
+                at_adapt->second.bounds.emplace(&xpr, std::make_unique<atom_adaptation::arith_bounds>(semitone::inf_rational(current_time), semitone::inf_rational(semitone::rational::POSITIVE_INFINITY)));
+            }
         }
     }
 
