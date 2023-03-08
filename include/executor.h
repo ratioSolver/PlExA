@@ -19,29 +19,31 @@ namespace ratio::executor
     {
       virtual ~item_bounds() = default;
     };
+    using bounds_ptr = utils::u_ptr<item_bounds>;
+
     struct bool_bounds : public item_bounds
     {
-      bool_bounds(const semitone::lbool &val) : val(val) {}
-      const semitone::lbool val;
+      bool_bounds(const utils::lbool &val) : val(val) {}
+      const utils::lbool val;
     };
     struct arith_bounds : public item_bounds
     {
-      arith_bounds(const semitone::inf_rational &lb, const semitone::inf_rational &ub) : lb(lb), ub(ub) {}
-      semitone::inf_rational lb, ub;
+      arith_bounds(const utils::inf_rational &lb, const utils::inf_rational &ub) : lb(lb), ub(ub) {}
+      utils::inf_rational lb, ub;
     };
     struct var_bounds : public item_bounds
     {
-      var_bounds(semitone::var_value &val) : val(val) {}
-      semitone::var_value &val;
+      var_bounds(utils::enum_val &val) : val(val) {}
+      utils::enum_val &val;
     };
 
     atom_adaptation(const semitone::lit &sigma_xi) : sigma_xi(sigma_xi) {}
 
     semitone::lit sigma_xi;
-    std::unordered_map<ratio::core::item *, std::unique_ptr<item_bounds>> bounds;
+    std::unordered_map<riddle::item *, bounds_ptr> bounds;
   };
 
-  class executor final : public ratio::core::core_listener, public ratio::solver::solver_listener, public semitone::theory
+  class executor final : public riddle::core_listener, public ratio::solver_listener, public semitone::theory
   {
     friend class executor_listener;
 
@@ -52,24 +54,24 @@ namespace ratio::executor
      * @param slv the solver maintaining the solution to execute.
      * @param units_per_tick the amount of units to increase the current time at each tick.
      */
-    PLEXA_EXPORT executor(ratio::solver::solver &slv, const semitone::rational &units_per_tick = semitone::rational::ONE);
+    PLEXA_EXPORT executor(ratio::solver &slv, const utils::rational &units_per_tick = utils::rational::ONE);
     executor(const executor &orig) = delete;
 
-    ratio::solver::solver &get_solver() { return slv; }
-    const ratio::solver::solver &get_solver() const { return slv; }
+    ratio::solver &get_solver() { return slv; }
+    const ratio::solver &get_solver() const { return slv; }
 
     /**
      * @brief Gets the current time.
      *
-     * @return const semitone::rational& the current time.
+     * @return const utils::rational& the current time.
      */
-    const semitone::rational &get_current_time() const { return current_time; };
+    const utils::rational &get_current_time() const { return current_time; };
     /**
      * @brief Gets the amount of units to increase the current time at each tick.
      *
-     * @return const semitone::rational& the amount of units to increase the current time at each tick.
+     * @return const utils::rational& the amount of units to increase the current time at each tick.
      */
-    const semitone::rational &get_units_per_tick() const { return units_per_tick; };
+    const utils::rational &get_units_per_tick() const { return units_per_tick; };
 
     /**
      * @brief Checks whether the current solution is being executed.
@@ -96,7 +98,7 @@ namespace ratio::executor
      * @return true if there is some task to be executed in the future.
      * @return false if there are no tasks to be executed in the future.
      */
-    bool is_finished() const { return slv.ratio::core::core::arith_value(slv.ratio::core::env::get("horizon")) <= current_time && dont_end.empty(); }
+    bool is_finished() const { return slv.arith_value(slv.get("horizon")) <= current_time && dont_end.empty(); }
 
     /**
      * @brief Performs a single execution step, increasing the current time of a `units_per_tick` amount, starting (ending) any task which starts (ends) between the `current_time` and `current_time + units_per_tick`.
@@ -108,9 +110,9 @@ namespace ratio::executor
     PLEXA_EXPORT void adapt(const std::string &script);
     PLEXA_EXPORT void adapt(const std::vector<std::string> &files);
 
-    PLEXA_EXPORT void dont_start_yet(const std::unordered_map<const ratio::core::atom *, semitone::rational> &atoms) { dont_start.insert(atoms.cbegin(), atoms.cend()); }
-    PLEXA_EXPORT void dont_end_yet(const std::unordered_map<const ratio::core::atom *, semitone::rational> &atoms) { dont_end.insert(atoms.cbegin(), atoms.cend()); }
-    PLEXA_EXPORT void failure(const std::unordered_set<const ratio::core::atom *> &atoms);
+    PLEXA_EXPORT void dont_start_yet(const std::unordered_map<const ratio::atom *, utils::rational> &atoms) { dont_start.insert(atoms.cbegin(), atoms.cend()); }
+    PLEXA_EXPORT void dont_end_yet(const std::unordered_map<const ratio::atom *, utils::rational> &atoms) { dont_end.insert(atoms.cbegin(), atoms.cend()); }
+    PLEXA_EXPORT void failure(const std::unordered_set<const ratio::atom *> &atoms);
 
   private:
     bool propagate(const semitone::lit &p) noexcept override;
@@ -118,39 +120,39 @@ namespace ratio::executor
     void push() noexcept override {}
     void pop() noexcept override {}
 
-    inline bool is_relevant(const ratio::core::predicate &pred) const noexcept { return relevant_predicates.count(&pred); }
+    inline bool is_relevant(const riddle::predicate &pred) const noexcept { return relevant_predicates.count(&pred); }
 
     void read(const std::string &) override { reset_relevant_predicates(); }
     void read(const std::vector<std::string> &) override { reset_relevant_predicates(); }
     void solution_found() override;
     void inconsistent_problem() override;
 
-    void flaw_created(const ratio::solver::flaw &f) override;
+    void flaw_created(const ratio::flaw &f) override;
 
     void build_timelines();
-    bool propagate_bounds(const ratio::core::item &itm, const atom_adaptation::item_bounds &bounds, const semitone::lit &reason);
+    bool propagate_bounds(const riddle::item &itm, const atom_adaptation::item_bounds &bounds, const semitone::lit &reason);
 
     void reset_relevant_predicates();
 
   private:
-    std::unordered_set<const ratio::core::predicate *> relevant_predicates; // impulses and intervals..
-    semitone::rational current_time;                                        // the current time in plan units..
-    const semitone::rational units_per_tick;                                // the number of plan units for each tick..
-    semitone::lit xi;                                                       // the execution variable..
-    bool pending_requirements = false;                                      // whether there are pending requirements to be solved or not..
+    std::unordered_set<const riddle::predicate *> relevant_predicates; // impulses and intervals..
+    utils::rational current_time;                                      // the current time in plan units..
+    const utils::rational units_per_tick;                              // the number of plan units for each tick..
+    semitone::lit xi;                                                  // the execution variable..
+    bool pending_requirements = false;                                 // whether there are pending requirements to be solved or not..
 #ifdef MULTIPLE_EXECUTORS
     std::mutex mtx;                      // the mutex for the critical sections..
     std::atomic<bool> executing = false; // the execution state..
 #else
     bool executing = false; // the execution state..
 #endif
-    std::unordered_map<const ratio::core::atom *, atom_adaptation> adaptations;               // for each atom, the numeric adaptations done during the executions (i.e., freezes and delays)..
-    std::unordered_map<semitone::var, const ratio::core::atom *> all_atoms;                   // all the interesting atoms indexed by their sigma_xi variable..
-    std::unordered_map<const ratio::core::atom *, semitone::rational> dont_start;             // the starting atoms which are not yet ready to start..
-    std::unordered_map<const ratio::core::atom *, semitone::rational> dont_end;               // the ending atoms which are not yet ready to end..
-    std::map<semitone::inf_rational, std::unordered_set<ratio::core::atom *>> s_atms, e_atms; // for each pulse, the atoms starting/ending at that pulse..
-    std::set<semitone::inf_rational> pulses;                                                  // all the pulses of the plan..
-    std::vector<executor_listener *> listeners;                                               // the executor listeners..
+    std::unordered_map<const ratio::atom *, atom_adaptation> adaptations;            // for each atom, the numeric adaptations done during the executions (i.e., freezes and delays)..
+    std::unordered_map<semitone::var, const ratio::atom *> all_atoms;                // all the interesting atoms indexed by their sigma_xi variable..
+    std::unordered_map<const ratio::atom *, utils::rational> dont_start;             // the starting atoms which are not yet ready to start..
+    std::unordered_map<const ratio::atom *, utils::rational> dont_end;               // the ending atoms which are not yet ready to end..
+    std::map<utils::inf_rational, std::unordered_set<ratio::atom *>> s_atms, e_atms; // for each pulse, the atoms starting/ending at that pulse..
+    std::set<utils::inf_rational> pulses;                                            // all the pulses of the plan..
+    std::vector<executor_listener *> listeners;                                      // the executor listeners..
   };
 
   class execution_exception : public std::exception
