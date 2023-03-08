@@ -29,7 +29,7 @@ file(GLOB EXEC_HEADERS include/*.h)
 add_library(${PROJECT_NAME} SHARED ${EXEC_SOURCES})
 GENERATE_EXPORT_HEADER(${PROJECT_NAME})
 target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>/include $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}> $<INSTALL_INTERFACE:>)
-target_link_libraries(${PROJECT_NAME} PRIVATE oRatioSolver RiDDLe SeMiTONE json)
+target_link_libraries(${PROJECT_NAME} PRIVATE oRatioSolver RiDDLe SeMiTONE json utils)
 
 message(STATUS "Multiple executors:     ${MULTIPLE_EXECUTORS}")
 if(MULTIPLE_EXECUTORS)
