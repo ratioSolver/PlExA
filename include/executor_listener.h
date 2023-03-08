@@ -22,7 +22,7 @@ namespace ratio::executor
     /**
      * @brief Notifies the listener the passing of time.
      */
-    virtual void tick([[maybe_unused]] const semitone::rational &time) { LOG("current time: " << to_string(time)); }
+    virtual void tick([[maybe_unused]] const utils::rational &time) { LOG("current time: " << to_string(time)); }
 
     /**
      * @brief Notifies the listener that some atoms are going to start.
@@ -31,13 +31,13 @@ namespace ratio::executor
      *
      * @param atoms the set of atoms which are going to start.
      */
-    virtual void starting(const std::unordered_set<ratio::core::atom *> &) {}
+    virtual void starting(const std::unordered_set<ratio::atom *> &) {}
     /**
      * @brief Notifies the listener that some atoms have started.
      *
      * @param atoms the set of atoms which have started.
      */
-    virtual void start(const std::unordered_set<ratio::core::atom *> &) {}
+    virtual void start(const std::unordered_set<ratio::atom *> &) {}
 
     /**
      * @brief Notifies the listener that some atoms are going to end.
@@ -46,13 +46,13 @@ namespace ratio::executor
      *
      * @param atoms the set of atoms which are going to end.
      */
-    virtual void ending(const std::unordered_set<ratio::core::atom *> &) {}
+    virtual void ending(const std::unordered_set<ratio::atom *> &) {}
     /**
      * @brief Notifies the listener that some atoms have ended.
      *
      * @param atoms the set of atoms which have ended.
      */
-    virtual void end(const std::unordered_set<ratio::core::atom *> &) {}
+    virtual void end(const std::unordered_set<ratio::atom *> &) {}
 
   protected:
     executor &exec;
