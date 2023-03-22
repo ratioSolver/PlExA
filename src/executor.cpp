@@ -432,6 +432,11 @@ namespace ratio::executor
                     q.push(ct);
         while (!q.empty())
         {
+            LOG_DEBUG("adding relevant predicates from type " << q.front()->get_name());
+            for (const auto &st : q.front()->get_types())
+                if (!st.get().is_primitive())
+                    if (auto ct = dynamic_cast<riddle::complex_type *>(&st.get()))
+                        q.push(ct);
             for (const auto &pred : q.front()->get_predicates())
                 if (slv.is_impulse(pred.get()) || slv.is_interval(pred.get()))
                     relevant_predicates.insert(&pred.get());
