@@ -432,7 +432,6 @@ namespace ratio::executor
                     q.push(ct);
         while (!q.empty())
         {
-            LOG_DEBUG("adding relevant predicates from type " << q.front()->get_name());
             for (const auto &st : q.front()->get_types())
                 if (!st.get().is_primitive())
                     if (auto ct = dynamic_cast<riddle::complex_type *>(&st.get()))
