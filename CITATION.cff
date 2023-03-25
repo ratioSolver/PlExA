@@ -1,0 +1,43 @@
+cff-version: 1.2.0
+title: PlExA
+message: Please cite this software using these metadata.
+type: software
+authors:
+  - given-names: Riccardo
+    family-names: De Benedictis
+    email: riccardo.debenedictis@cnr.it
+    affiliation: 'CNR - Italian National Research Council, ISTC'
+    orcid: 'https://orcid.org/0000-0003-2344-4088'
+version: 3.0
+repository-code: 'https://github.com/ratioSolver/PlExA'
+references:
+  - type: article
+    title: Incremental Timeline-Based Planning for Efficient Plan Execution and Adaptation
+    authors:
+      - given-names: Riccardo
+        family-names: De Benedictis
+        email: riccardo.debenedictis@cnr.it
+        affiliation: 'CNR - Italian National Research Council, ISTC'
+        orcid: 'https://orcid.org/0000-0003-2344-4088'
+      - given-names: Gloria
+        family-names: Beraldo
+        email: gloria.beraldo@cnr.it
+        affiliation: 'CNR - Italian National Research Council, ISTC'
+        orcid: 'https://orcid.org/0000-0001-8937-9739'
+      - given-names: Amedeo
+        family-names: Cesta
+        email: amedeo.cesta@cnr.it
+        orcid: 'https://orcid.org/0000-0002-0703-9122'
+        affiliation: 'CNR - Italian National Research Council, ISTC'
+      - given-names: Gabriella
+        family-names: Cortellessa
+        email: gabriella.cortellessa@cnr.it
+        orcid: 'https://orcid.org/0000-0002-9835-1575'
+        affiliation: 'CNR - Italian National Research Council, ISTC'
+    doi: 10.1007/978-3-031-27181-6_16
+    booktitle: 'AIxIA 2022 -- Advances in Artificial Intelligence'
+    series: 'Lecture Notes in Computer Science'
+    volume: '13796'
+    pages: '225--240'
+    publisher: 'IOS Press'
+    year: '2023'
