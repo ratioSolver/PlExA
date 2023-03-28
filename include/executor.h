@@ -13,6 +13,16 @@ namespace ratio::executor
 {
   class executor_listener;
 
+  enum executor_state
+  {
+    Reasoning,
+    Idle,
+    Adapting,
+    Executing,
+    Finished,
+    Failed
+  };
+
   struct atom_adaptation
   {
     struct item_bounds
@@ -60,6 +70,7 @@ namespace ratio::executor
     ratio::solver &get_solver() { return slv; }
     const ratio::solver &get_solver() const { return slv; }
     const std::string &get_name() const { return name; }
+    executor_state get_state() const { return state; }
 
     /**
      * @brief Gets the current time.
@@ -125,6 +136,7 @@ namespace ratio::executor
 
     void read(const std::string &) override { reset_relevant_predicates(); }
     void read(const std::vector<std::string> &) override { reset_relevant_predicates(); }
+    void started_solving() override;
     void solution_found() override;
     void inconsistent_problem() override;
 
@@ -137,6 +149,7 @@ namespace ratio::executor
 
   private:
     const std::string name;
+    executor_state state = executor_state::Reasoning;                  // the current state of the executor..
     std::unordered_set<const riddle::predicate *> relevant_predicates; // impulses and intervals..
     utils::rational current_time;                                      // the current time in plan units..
     const utils::rational units_per_tick;                              // the number of plan units for each tick..

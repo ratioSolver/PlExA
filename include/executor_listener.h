@@ -19,6 +19,8 @@ namespace ratio::executor
     virtual ~executor_listener() { exec.listeners.erase(std::find(exec.listeners.cbegin(), exec.listeners.cend(), this)); }
 
   private:
+    virtual void executor_state_changed([[maybe_unused]] executor_state state) {}
+
     /**
      * @brief Notifies the listener the passing of time.
      */

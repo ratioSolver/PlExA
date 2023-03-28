@@ -217,6 +217,14 @@ namespace ratio::executor
         // we update the current time..
         current_time += units_per_tick;
 
+        if (slv.arith_value(slv.get("horizon")) <= current_time && dont_end.empty())
+        { // we have reached the horizon..
+            state = executor_state::Finished;
+            // we notify that the execution has finished..
+            for (const auto &l : listeners)
+                l->executor_state_changed(state);
+        }
+
         // we notify that a tick has arised..
         for (const auto &l : listeners)
             l->tick(current_time);
@@ -276,6 +284,16 @@ namespace ratio::executor
         return true;
     }
 
+    void executor::started_solving()
+    {
+        if (state != executor_state::Reasoning)
+        {
+            state = executor_state::Adapting;
+            for (const auto &l : listeners)
+                l->executor_state_changed(state);
+        }
+    }
+
     void executor::solution_found()
     {
         switch (slv.get_sat_core().value(xi))
@@ -295,12 +313,20 @@ namespace ratio::executor
             break;
         }
         build_timelines();
+
+        state = executing ? executor_state::Executing : executor_state::Idle;
+        for (const auto &l : listeners)
+            l->executor_state_changed(state);
     }
     void executor::inconsistent_problem()
     {
         s_atms.clear();
         e_atms.clear();
         pulses.clear();
+
+        state = executor_state::Failed;
+        for (const auto &l : listeners)
+            l->executor_state_changed(state);
     }
 
     void executor::flaw_created(const ratio::flaw &f)
