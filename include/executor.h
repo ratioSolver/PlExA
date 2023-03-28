@@ -54,11 +54,12 @@ namespace ratio::executor
      * @param slv the solver maintaining the solution to execute.
      * @param units_per_tick the amount of units to increase the current time at each tick.
      */
-    PLEXA_EXPORT executor(ratio::solver &slv, const utils::rational &units_per_tick = utils::rational::ONE);
+    PLEXA_EXPORT executor(ratio::solver &slv, const std::string &name = "default", const utils::rational &units_per_tick = utils::rational::ONE);
     executor(const executor &orig) = delete;
 
     ratio::solver &get_solver() { return slv; }
     const ratio::solver &get_solver() const { return slv; }
+    const std::string &get_name() const { return name; }
 
     /**
      * @brief Gets the current time.
@@ -135,6 +136,7 @@ namespace ratio::executor
     void reset_relevant_predicates();
 
   private:
+    const std::string name;
     std::unordered_set<const riddle::predicate *> relevant_predicates; // impulses and intervals..
     utils::rational current_time;                                      // the current time in plan units..
     const utils::rational units_per_tick;                              // the number of plan units for each tick..
@@ -159,6 +161,9 @@ namespace ratio::executor
   {
     const char *what() const noexcept override { return "the plan cannot be executed.."; }
   };
+
+  inline json::json solver_created_message(const executor &exec) { return {{"type", "solver_created"}, {"solver_id", get_id(exec.get_solver())}, {"name", exec.get_name()}}; }
+  inline json::json solver_destroyed_message(const executor &exec) { return {{"type", "solver_destroyed"}, {"solver_id", get_id(exec.get_solver())}}; }
 
   inline json::json tick_message(const executor &exec, const utils::rational &time) { return {{"type", "tick"}, {"solver_id", get_id(exec.get_solver())}, {"time", to_json(time)}}; }
 

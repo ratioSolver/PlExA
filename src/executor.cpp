@@ -8,7 +8,7 @@
 
 namespace ratio::executor
 {
-    PLEXA_EXPORT executor::executor(ratio::solver &slv, const utils::rational &units_per_tick) : core_listener(slv), solver_listener(slv), theory(slv.get_sat_core_ptr()), units_per_tick(units_per_tick), xi(slv.get_sat_core().new_var())
+    PLEXA_EXPORT executor::executor(ratio::solver &slv, const std::string &name, const utils::rational &units_per_tick) : core_listener(slv), solver_listener(slv), theory(slv.get_sat_core_ptr()), name(name), units_per_tick(units_per_tick), xi(slv.get_sat_core().new_var())
     {
         bind(variable(xi));
         build_timelines();
