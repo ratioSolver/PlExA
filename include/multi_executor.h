@@ -66,6 +66,10 @@ namespace ratio::executor
   public:
     multi_exec(multi_executor &m_exec, ratio::solver &slv, ratio::executor::executor &exec, const std::string &name) : core_listener(slv), solver_listener(slv), executor_listener(exec), m_exec(m_exec), slv(slv), exec(exec), name(name) {}
 
+    ratio::solver &get_solver() const noexcept { return slv; }
+    ratio::executor::executor &get_executor() const noexcept { return exec; }
+    const std::string &get_name() const noexcept { return name; }
+
   private:
     void log(const std::string &msg) override { m_exec.fire_log(*this, msg); }
     void read(const std::string &rddl) override { m_exec.fire_read(*this, rddl); }
@@ -103,4 +107,8 @@ namespace ratio::executor
     ratio::executor::executor &exec;
     const std::string &name;
   };
+
+  inline uintptr_t get_id(const multi_exec &exec) noexcept { return reinterpret_cast<uintptr_t>(&exec); }
+
+  json::json state_changed_message(const multi_exec &exec) noexcept { return json::json{{"type", "state_changed"}, {"id", get_id(exec)}}; }
 } // namespace ratio::executor

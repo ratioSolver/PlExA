@@ -159,4 +159,35 @@ namespace ratio::executor
   {
     const char *what() const noexcept override { return "the plan cannot be executed.."; }
   };
+
+  inline json::json tick_message(const executor &exec, const utils::rational &time) { return {{"type", "tick"}, {"solver_id", get_id(exec.get_solver())}, {"time", to_json(time)}}; }
+
+  inline json::json starting_message(const executor &exec, const std::unordered_set<ratio::atom *> &atoms)
+  {
+    json::json starting(json::json_type::array);
+    for (const auto &atm : atoms)
+      starting.push_back(get_id(*atm));
+    return {{"type", "starting"}, {"solver_id", get_id(exec.get_solver())}, {"starting", std::move(starting)}};
+  }
+  inline json::json start_message(const executor &exec, const std::unordered_set<ratio::atom *> &atoms)
+  {
+    json::json starting(json::json_type::array);
+    for (const auto &atm : atoms)
+      starting.push_back(get_id(*atm));
+    return {{"type", "start"}, {"solver_id", get_id(exec.get_solver())}, {"start", std::move(starting)}};
+  }
+  inline json::json ending_message(const executor &exec, const std::unordered_set<ratio::atom *> &atoms)
+  {
+    json::json ending(json::json_type::array);
+    for (const auto &atm : atoms)
+      ending.push_back(get_id(*atm));
+    return {{"type", "ending"}, {"solver_id", get_id(exec.get_solver())}, {"ending", std::move(ending)}};
+  }
+  inline json::json end_message(const executor &exec, const std::unordered_set<ratio::atom *> &atoms)
+  {
+    json::json ending(json::json_type::array);
+    for (const auto &atm : atoms)
+      ending.push_back(get_id(*atm));
+    return {{"type", "end"}, {"solver_id", get_id(exec.get_solver())}, {"end", std::move(ending)}};
+  }
 } // namespace ratio::executor
