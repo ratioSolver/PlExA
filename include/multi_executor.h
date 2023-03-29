@@ -109,6 +109,4 @@ namespace ratio::executor
   };
 
   inline uintptr_t get_id(const multi_exec &exec) noexcept { return reinterpret_cast<uintptr_t>(&exec); }
-
-  json::json state_changed_message(const multi_exec &exec) noexcept { return json::json{{"type", "state_changed"}, {"id", get_id(exec)}}; }
 } // namespace ratio::executor

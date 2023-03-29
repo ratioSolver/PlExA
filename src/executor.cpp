@@ -14,6 +14,22 @@ namespace ratio::executor
         build_timelines();
     }
 
+    PLEXA_EXPORT void executor::start_execution()
+    {
+        executing = true;
+        state = executor_state::Executing;
+        for (const auto &l : listeners)
+            l->executor_state_changed(state);
+    }
+
+    PLEXA_EXPORT void executor::pause_execution()
+    {
+        executing = false;
+        state = executor_state::Idle;
+        for (const auto &l : listeners)
+            l->executor_state_changed(state);
+    }
+
     PLEXA_EXPORT void executor::tick()
     {
 #ifdef MULTIPLE_EXECUTORS

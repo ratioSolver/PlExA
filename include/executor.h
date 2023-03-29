@@ -97,20 +97,12 @@ namespace ratio::executor
      * @brief Starts the execution of the current solution.
      *
      */
-    void start_execution() { executing = true; }
+    PLEXA_EXPORT void start_execution();
     /**
      * @brief Pauses the execution of the current solution.
      *
      */
-    void pause_execution() { executing = false; }
-
-    /**
-     * @brief Checks whether there are task to be executed in the future.
-     *
-     * @return true if there is some task to be executed in the future.
-     * @return false if there are no tasks to be executed in the future.
-     */
-    bool is_finished() const { return slv.arith_value(slv.get("horizon")) <= current_time && dont_end.empty(); }
+    PLEXA_EXPORT void pause_execution();
 
     /**
      * @brief Performs a single execution step, increasing the current time of a `units_per_tick` amount, starting (ending) any task which starts (ends) between the `current_time` and `current_time + units_per_tick`.
@@ -175,8 +167,31 @@ namespace ratio::executor
     const char *what() const noexcept override { return "the plan cannot be executed.."; }
   };
 
+  inline std::string to_string(executor_state state) noexcept
+  {
+    switch (state)
+    {
+    case Reasoning:
+      return "reasoning";
+    case Idle:
+      return "idle";
+    case Adapting:
+      return "adapting";
+    case Executing:
+      return "executing";
+    case Finished:
+      return "finished";
+    case Failed:
+      return "failed";
+    default:
+      return "unknown";
+    }
+  }
+
   inline json::json solver_created_message(const executor &exec) { return {{"type", "solver_created"}, {"solver_id", get_id(exec.get_solver())}, {"name", exec.get_name()}}; }
   inline json::json solver_destroyed_message(const executor &exec) { return {{"type", "solver_destroyed"}, {"solver_id", get_id(exec.get_solver())}}; }
+
+  inline json::json state_changed_message(const executor &exec) { return {{"type", "executor_state_changed"}, {"solver_id", get_id(exec.get_solver())}, {"state", to_string(exec.get_state())}}; }
 
   inline json::json tick_message(const executor &exec, const utils::rational &time) { return {{"type", "tick"}, {"solver_id", get_id(exec.get_solver())}, {"time", to_json(time)}}; }
 
