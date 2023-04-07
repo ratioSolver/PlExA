@@ -91,7 +91,14 @@ namespace ratio::executor
      * @return true if the current solution is being executed.
      * @return false if the current solution is paused.
      */
-    bool is_executing() const { return executing; }
+    bool is_running() const { return running; }
+
+    /**
+     * @brief Gets the atoms which are currently executing.
+     *
+     * @return const std::unordered_set<const ratio::atom *>& the atoms which are currently executing.
+     */
+    const std::unordered_set<const ratio::atom *> &get_executing() const { return executing; }
 
     /**
      * @brief Starts the execution of the current solution.
@@ -148,11 +155,12 @@ namespace ratio::executor
     semitone::lit xi;                                                  // the execution variable..
     bool pending_requirements = false;                                 // whether there are pending requirements to be solved or not..
 #ifdef MULTIPLE_EXECUTORS
-    std::mutex mtx;                      // the mutex for the critical sections..
-    std::atomic<bool> executing = false; // the execution state..
+    std::mutex mtx;                    // the mutex for the critical sections..
+    std::atomic<bool> running = false; // the running state..
 #else
-    bool executing = false; // the execution state..
+    bool running = false; // the execution state..
 #endif
+    std::unordered_set<const ratio::atom *> executing;                               // the atoms currently executing..
     std::unordered_map<const ratio::atom *, atom_adaptation> adaptations;            // for each atom, the numeric adaptations done during the executions (i.e., freezes and delays)..
     std::unordered_map<semitone::var, const ratio::atom *> all_atoms;                // all the interesting atoms indexed by their sigma_xi variable..
     std::unordered_map<const ratio::atom *, utils::rational> dont_start;             // the starting atoms which are not yet ready to start..

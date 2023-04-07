@@ -16,7 +16,7 @@ namespace ratio::executor
 
     PLEXA_EXPORT void executor::start_execution()
     {
-        executing = true;
+        running = true;
         state = executor_state::Executing;
         for (const auto &l : listeners)
             l->executor_state_changed(state);
@@ -24,7 +24,7 @@ namespace ratio::executor
 
     PLEXA_EXPORT void executor::pause_execution()
     {
-        executing = false;
+        running = false;
         state = executor_state::Idle;
         for (const auto &l : listeners)
             l->executor_state_changed(state);
@@ -41,7 +41,7 @@ namespace ratio::executor
             pending_requirements = false;
         }
 
-        if (!executing)
+        if (!running)
             return;
 
         LOG("current time: " << to_string(current_time));
@@ -163,6 +163,8 @@ namespace ratio::executor
                                 adaptations.at(atm).bounds.emplace(itm, new atom_adaptation::var_bounds(**vals.begin()));
                             }
                         }
+                // we add the starting atoms to the set of atoms executing..
+                executing.insert(starting_atms->second.cbegin(), starting_atms->second.cend());
                 // we notify that some atoms are starting their execution..
                 for (const auto &l : listeners)
                     l->start(starting_atms->second);
@@ -222,6 +224,9 @@ namespace ratio::executor
                         else
                             throw std::runtime_error("not implemented yet");
                     }
+                // we remove the ending atoms from the set of atoms executing..
+                for (const auto &atm : ending_atms->second)
+                    executing.erase(atm);
                 // we notify that some atoms are ending their execution..
                 for (const auto &l : listeners)
                     l->end(ending_atms->second);
@@ -330,7 +335,7 @@ namespace ratio::executor
         }
         build_timelines();
 
-        state = executing ? executor_state::Executing : executor_state::Idle;
+        state = running ? executor_state::Executing : executor_state::Idle;
         for (const auto &l : listeners)
             l->executor_state_changed(state);
     }
