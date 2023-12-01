@@ -197,7 +197,7 @@ namespace ratio::executor
   }
 
   inline json::json solver_created_message(const executor &exec) { return {{"type", "solver_created"}, {"solver_id", get_id(exec.get_solver())}, {"name", exec.get_name()}}; }
-  inline json::json solver_destroyed_message(const executor &exec) { return {{"type", "solver_destroyed"}, {"solver_id", get_id(exec.get_solver())}}; }
+  inline json::json solver_destroyed_message(const uintptr_t id) { return {{"type", "solver_destroyed"}, {"solver_id", id}}; }
 
   inline json::json executor_state_changed_message(const executor &exec) { return {{"type", "executor_state_changed"}, {"solver_id", get_id(exec.get_solver())}, {"state", to_string(exec.get_state())}}; }
 
