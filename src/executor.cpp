@@ -235,9 +235,6 @@ namespace ratio::executor
             pulses.erase(pulses.cbegin());
         }
 
-        // we update the current time..
-        current_time += units_per_tick;
-
         if (slv.arith_value(slv.get("horizon")) <= current_time && dont_end.empty())
         { // we have reached the horizon..
             state = executor_state::Finished;
@@ -245,6 +242,9 @@ namespace ratio::executor
             for (const auto &l : listeners)
                 l->executor_state_changed(state);
         }
+
+        // we update the current time..
+        current_time += units_per_tick;
 
         // we notify that a tick has arised..
         for (const auto &l : listeners)
