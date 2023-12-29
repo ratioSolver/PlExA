@@ -231,4 +231,15 @@ namespace ratio::executor
       ending.push_back(get_id(*atm));
     return {{"type", "end"}, {"solver_id", get_id(exec.get_solver())}, {"end", std::move(ending)}};
   }
+
+  inline json::json executor_state_message(const executor &exec)
+  {
+    json::json j_sc = solver_state_changed_message(exec.get_solver());
+    j_sc["time"] = ratio::to_json(exec.get_current_time());
+    json::json j_executing(json::json_type::array);
+    for (const auto &atm : exec.get_executing())
+      j_executing.push_back(get_id(*atm));
+    j_sc["executing"] = std::move(j_executing);
+    return j_sc;
+  }
 } // namespace ratio::executor
