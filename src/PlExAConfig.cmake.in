@@ -1,7 +1,0 @@
-set(PLEXA_VERSION 1.0.0)
-
-@PACKAGE_INIT@
-
-set_and_check(PLEXA_INCLUDE_DIR "@PACKAGE_CMAKE_INSTALL_INCLUDEDIR@/plexa")
-
-check_required_components(plexa)

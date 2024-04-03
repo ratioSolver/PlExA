@@ -3,6 +3,7 @@
 #include <functional>
 #include <atomic>
 #include <thread>
+#include <mutex>
 
 namespace ratio::time
 {
@@ -27,5 +28,6 @@ namespace ratio::time
     std::chrono::steady_clock::time_point tick_time;
     std::atomic<bool> executing;
     std::thread th;
+    std::mutex mtx;
   };
 } // namespace ratio::time

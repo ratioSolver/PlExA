@@ -1,4 +1,4 @@
-#include "timer.h"
+#include "timer.hpp"
 #include <chrono>
 
 namespace ratio::time
@@ -7,9 +7,8 @@ namespace ratio::time
 
     void timer::start()
     {
-        if (executing.load(std::memory_order_acquire))
+        if (executing.exchange(true, std::memory_order_acq_rel))
             stop();
-        executing.store(true, std::memory_order_release);
         tick_time = std::chrono::steady_clock::now() + std::chrono::milliseconds(tick_duration);
         th = std::thread([this]()
                          {
@@ -23,6 +22,7 @@ namespace ratio::time
     void timer::stop()
     {
         executing.store(false, std::memory_order_release);
+        std::lock_guard<std::mutex> lock(mtx);
         if (th.joinable())
             th.join();
     }
