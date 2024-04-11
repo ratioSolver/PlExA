@@ -7,7 +7,7 @@ enable_testing()
 
 add_subdirectory(extern/solver)
 
-add_library(PlExA src/timer.cpp src/executor.cpp)
+add_library(PlExA src/timer.cpp src/executor.cpp src/executor_theory.cpp)
 add_dependencies(PlExA oRatioLib)
 target_link_libraries(PlExA PUBLIC oRatioLib)
 target_include_directories(PlExA PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)

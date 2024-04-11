@@ -4,6 +4,8 @@
 
 namespace ratio::executor
 {
+  class executor_theory;
+
   enum executor_state
   {
     Reasoning,
@@ -14,11 +16,13 @@ namespace ratio::executor
     Failed
   };
 
-  class executor : public semitone::theory
+  class executor
   {
   public:
-    executor(ratio::solver &slv, const utils::rational &units_per_tick = utils::rational::one) noexcept;
+    executor(std::shared_ptr<ratio::solver> slv = std::make_shared<ratio::solver>(), const utils::rational &units_per_tick = utils::rational::one) noexcept;
+    virtual ~executor() noexcept = default;
 
+    ratio::solver &get_solver() noexcept { return *slv; }
     executor_state get_state() const noexcept { return state; }
     const utils::rational &get_current_time() const noexcept { return current_time; }
 
@@ -68,12 +72,12 @@ namespace ratio::executor
     virtual void end(const std::vector<std::reference_wrapper<const ratio::atom>> &atms);
 
   protected:
-    ratio::solver &slv; // the solver..
+    std::shared_ptr<ratio::solver> slv; // the solver..
 
   private:
+    executor_theory &exec_theory;                     // the executor theory..
     executor_state state = executor_state::Reasoning; // the current state of the executor..
     const utils::rational units_per_tick;             // the number of plan units for each tick..
     utils::rational current_time;                     // the current time in plan units..
-    utils::lit xi;                                    // the execution variable..
   };
 } // namespace ratio::executor
