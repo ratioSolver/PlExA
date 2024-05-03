@@ -50,6 +50,12 @@ namespace ratio::executor
      */
     ratio::solver &get_solver() noexcept { return *slv; }
     /**
+     * Returns a reference to the solver object.
+     *
+     * @return A reference to the solver object.
+     */
+    const ratio::solver &get_solver() const noexcept { return *slv; }
+    /**
      * @brief Get the state of the executor.
      *
      * @return The state of the executor.
