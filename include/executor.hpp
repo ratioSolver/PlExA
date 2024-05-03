@@ -16,14 +16,50 @@ namespace ratio::executor
     Failed
   };
 
+  inline std::string to_string(executor_state state)
+  {
+    switch (state)
+    {
+    case Reasoning:
+      return "Reasoning";
+    case Idle:
+      return "Idle";
+    case Adapting:
+      return "Adapting";
+    case Executing:
+      return "Executing";
+    case Finished:
+      return "Finished";
+    case Failed:
+      return "Failed";
+    default:
+      return "Unknown";
+    }
+  }
+
   class executor
   {
   public:
     executor(std::shared_ptr<ratio::solver> slv = std::make_shared<ratio::solver>(), const utils::rational &units_per_tick = utils::rational::one) noexcept;
     virtual ~executor() noexcept = default;
 
+    /**
+     * Returns a reference to the solver object.
+     *
+     * @return A reference to the solver object.
+     */
     ratio::solver &get_solver() noexcept { return *slv; }
+    /**
+     * @brief Get the state of the executor.
+     *
+     * @return The state of the executor.
+     */
     executor_state get_state() const noexcept { return state; }
+    /**
+     * Returns the current time.
+     *
+     * @return A reference to the current time.
+     */
     const utils::rational &get_current_time() const noexcept { return current_time; }
 
   private:
