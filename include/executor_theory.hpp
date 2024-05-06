@@ -11,6 +11,8 @@ namespace ratio::executor
   public:
     executor_theory(executor &exec) noexcept;
 
+    void init() noexcept;
+
   private:
     bool propagate(const utils::lit &) noexcept override { return true; }
     bool check() noexcept override { return true; }
