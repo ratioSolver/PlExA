@@ -123,6 +123,7 @@ namespace ratio::executor
     utils::rational current_time;                     // the current time in plan units..
   };
 
+#ifdef ENABLE_VISUALIZATION
   /**
    * @brief Creates a JSON message for a new executor.
    *
@@ -142,4 +143,5 @@ namespace ratio::executor
    * @return A JSON object representing the deleted executor message.
    */
   inline json::json deleted_executor_message(const uintptr_t id) { return {{"type", "deleted_executor"}, {"id", id}}; }
+#endif
 } // namespace ratio::executor
