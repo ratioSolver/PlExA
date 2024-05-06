@@ -122,4 +122,24 @@ namespace ratio::executor
     const utils::rational units_per_tick;             // the number of plan units for each tick..
     utils::rational current_time;                     // the current time in plan units..
   };
+
+  /**
+   * @brief Creates a JSON message for a new executor.
+   *
+   * This function creates a JSON message that represents a new executor. The message includes the executor's ID, name, and state.
+   *
+   * @param exec The executor object.
+   * @return A JSON object representing the new executor message.
+   */
+  inline json::json new_executor_message(const executor &exec) { return {{"type", "new_executor"}, {"id", get_id(exec.get_solver())}, {"name", exec.get_solver().get_name()}, {"state", to_string(exec.get_state())}}; }
+
+  /**
+   * @brief Creates a JSON message indicating that an executor has been deleted.
+   *
+   * This function creates a JSON message that indicates that an executor has been deleted. The message includes the ID of the deleted executor.
+   *
+   * @param id The ID of the deleted executor.
+   * @return A JSON object representing the deleted executor message.
+   */
+  inline json::json deleted_executor_message(const uintptr_t id) { return {{"type", "deleted_executor"}, {"id", id}}; }
 } // namespace ratio::executor
