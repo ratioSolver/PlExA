@@ -21,19 +21,19 @@ namespace ratio::executor
     switch (state)
     {
     case Reasoning:
-      return "Reasoning";
+      return "reasoning";
     case Idle:
-      return "Idle";
+      return "idle";
     case Adapting:
-      return "Adapting";
+      return "adapting";
     case Executing:
-      return "Executing";
+      return "executing";
     case Finished:
-      return "Finished";
+      return "finished";
     case Failed:
-      return "Failed";
-    default:
-      return "Unknown";
+      return "failed";
+    default: // should never happen..
+      return "unknown";
     }
   }
 
@@ -125,6 +125,16 @@ namespace ratio::executor
 
 #ifdef ENABLE_VISUALIZATION
   /**
+   * @brief Creates a JSON message for an executor.
+   *
+   * This function creates a JSON message that represents an executor. The message includes the executor's ID, name, and state.
+   *
+   * @param exec The executor object.
+   * @return A JSON object representing the executor message.
+   */
+  inline json::json to_json(const executor &exec) { return {{"id", get_id(exec.get_solver())}, {"name", exec.get_solver().get_name()}, {"state", to_string(exec.get_state())}}; }
+
+  /**
    * @brief Creates a JSON message for a new executor.
    *
    * This function creates a JSON message that represents a new executor. The message includes the executor's ID, name, and state.
@@ -132,7 +142,12 @@ namespace ratio::executor
    * @param exec The executor object.
    * @return A JSON object representing the new executor message.
    */
-  inline json::json new_executor_message(const executor &exec) { return {{"type", "new_executor"}, {"id", get_id(exec.get_solver())}, {"name", exec.get_solver().get_name()}, {"state", to_string(exec.get_state())}}; }
+  inline json::json new_executor_message(const executor &exec)
+  {
+    auto exec_msg = to_json(exec);
+    exec_msg["type"] = "new_executor";
+    return exec_msg;
+  }
 
   /**
    * @brief Creates a JSON message indicating that an executor has been deleted.
