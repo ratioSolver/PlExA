@@ -37,11 +37,32 @@ namespace ratio::executor
     }
   }
 
+  /**
+   * @class executor
+   * @brief Represents an executor for solving and executing atoms.
+   *
+   * The `executor` class is responsible for managing the execution of atoms and solving the associated constraints.
+   * It provides methods for initializing the executor, accessing the solver object, retrieving the executor state,
+   * getting the current time, and obtaining information about the executing atoms.
+   */
   class executor
   {
   public:
+    /**
+     * @brief Constructs an executor object.
+     *
+     * This constructor initializes an executor object with the specified solver and units per tick.
+     *
+     * @param slv A shared pointer to a `ratio::solver` object. Default is a newly created `ratio::solver` object.
+     * @param units_per_tick The number of units per tick. Default is `utils::rational::one`.
+     */
     executor(std::shared_ptr<ratio::solver> slv = std::make_shared<ratio::solver>(), const utils::rational &units_per_tick = utils::rational::one) noexcept;
     virtual ~executor() noexcept = default;
+
+    /**
+     * Initializes the executor.
+     */
+    void init();
 
     /**
      * Returns a reference to the solver object.
@@ -67,6 +88,22 @@ namespace ratio::executor
      * @return A reference to the current time.
      */
     const utils::rational &get_current_time() const noexcept { return current_time; }
+
+    /**
+     * Returns a vector of const references to the executing atoms.
+     *
+     * This function returns a vector containing const references to the atoms that are currently executing.
+     * The references are wrapped in `std::reference_wrapper` to allow storing them in a vector.
+     *
+     * @return A vector of const references to the executing atoms.
+     */
+    std::vector<std::reference_wrapper<const ratio::atom>> get_executing_atoms() const noexcept
+    {
+      std::vector<std::reference_wrapper<const ratio::atom>> atoms;
+      for (const auto &atm : executing)
+        atoms.push_back(std::cref(*atm));
+      return atoms;
+    }
 
   private:
     /**
@@ -117,10 +154,11 @@ namespace ratio::executor
     std::shared_ptr<ratio::solver> slv; // the solver..
 
   private:
-    executor_theory &exec_theory;                     // the executor theory..
-    executor_state state = executor_state::Reasoning; // the current state of the executor..
-    const utils::rational units_per_tick;             // the number of plan units for each tick..
-    utils::rational current_time;                     // the current time in plan units..
+    executor_theory &exec_theory;                      // the executor theory..
+    executor_state state = executor_state::Reasoning;  // the current state of the executor..
+    const utils::rational units_per_tick;              // the number of plan units for each tick..
+    utils::rational current_time;                      // the current time in plan units..
+    std::unordered_set<const ratio::atom *> executing; // the atoms that are currently executing..
   };
 
 #ifdef ENABLE_VISUALIZATION
@@ -158,5 +196,34 @@ namespace ratio::executor
    * @return A JSON object representing the deleted executor message.
    */
   inline json::json deleted_executor_message(const uintptr_t id) { return {{"type", "deleted_executor"}, {"id", id}}; }
+
+  /**
+   * @brief Creates a JSON message indicating that the state of an executor has changed.
+   *
+   * This function creates a JSON message that indicates that the state of an executor has changed. The message includes the ID of the executor and its new state.
+   *
+   * @param exec The executor object.
+   * @return A JSON object representing the state changed message.
+   */
+  inline json::json state_changed_message(const executor &exec) { return {{"type", "executor_state_changed"}, {"id", get_id(exec.get_solver())}, {"state", to_string(exec.get_state())}}; }
+
+  /**
+   * Returns a JSON object representing the state message of the executor.
+   *
+   * @param exec The executor object.
+   * @return A JSON object representing the state message.
+   */
+  inline json::json state_message(const executor &exec)
+  {
+    auto state_msg = to_json(exec.get_solver());
+    state_msg["type"] = "executor_state";
+    state_msg["state"] = to_string(exec.get_state());
+    state_msg["time"] = ratio::to_json(exec.get_current_time());
+    json::json executing_atoms(json::json_type::array);
+    for (const auto &atm : exec.get_executing_atoms())
+      executing_atoms.push_back(get_id(atm.get()));
+    state_msg["executing_atoms"] = std::move(executing_atoms);
+    return state_msg;
+  }
 #endif
 } // namespace ratio::executor
