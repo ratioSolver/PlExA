@@ -1,6 +1,10 @@
 #pragma once
 
 #include "solver.hpp"
+#ifdef MULTIPLE_EXECUTORS
+#include <mutex>
+#include <atomic>
+#endif
 
 namespace ratio::executor
 {
@@ -90,6 +94,54 @@ namespace ratio::executor
     const utils::rational &get_current_time() const noexcept { return current_time; }
 
     /**
+     * @brief Adapts the planning problem taking into account the given RiDDLe script.
+     *
+     * This function adapts the planning problem by taking into account the given RiDDLe script.
+     *
+     * @param script The RiDDLe script to adapt the planning problem.
+     */
+    void adapt(const std::string &script);
+    /**
+     * @brief Adapts the planning problem taking into account the given RiDDLe files.
+     *
+     * This function adapts the planning problem by taking into account the given RiDDLe files.
+     *
+     * @param files The RiDDLe files to adapt the planning problem.
+     */
+    void adapt(const std::vector<std::string> &files);
+
+    /**
+     * @brief Checks if the executor is currently running.
+     *
+     * @return true if the executor is running, false otherwise.
+     */
+    bool is_running() const noexcept { return running; }
+
+    /**
+     * @brief Starts the executor.
+     *
+     * This function starts the executor and sets the state to `Executing`.
+     */
+    void start();
+
+    /**
+     * @brief Pauses the executor.
+     *
+     * This function pauses the executor and sets the state to `Idle`.
+     */
+    void pause();
+
+    /**
+     * @brief Executes a single tick of the executor.
+     *
+     * This function performs a single iteration of the executor's main loop.
+     * It is responsible for executing any pending tasks or events.
+     *
+     * @note This function should be called periodically to ensure proper execution of the executor.
+     */
+    void tick();
+
+    /**
      * Returns a vector of const references to the executing atoms.
      *
      * This function returns a vector containing const references to the atoms that are currently executing.
@@ -154,9 +206,16 @@ namespace ratio::executor
     std::shared_ptr<ratio::solver> slv; // the solver..
 
   private:
-    executor_theory &exec_theory;                      // the executor theory..
-    executor_state state = executor_state::Reasoning;  // the current state of the executor..
-    const utils::rational units_per_tick;              // the number of plan units for each tick..
+    executor_theory &exec_theory;                     // the executor theory..
+    executor_state state = executor_state::Reasoning; // the current state of the executor..
+    const utils::rational units_per_tick;             // the number of plan units for each tick..
+#ifdef MULTIPLE_EXECUTORS
+    std::mutex mtx;                    // the mutex for the critical sections..
+    std::atomic<bool> running = false; // the running state..
+#else
+    bool running = false; // the execution state..
+#endif
+    bool pending_requirements = false;                 // whether there are pending requirements to be solved or not..
     utils::rational current_time;                      // the current time in plan units..
     std::unordered_set<const ratio::atom *> executing; // the atoms that are currently executing..
   };
@@ -217,13 +276,28 @@ namespace ratio::executor
   {
     auto state_msg = to_json(exec.get_solver());
     state_msg["type"] = "executor_state";
+    state_msg["id"] = get_id(exec.get_solver());
     state_msg["state"] = to_string(exec.get_state());
+    auto timelines = to_timelines(exec.get_solver());
+    if (!timelines.get_array().empty())
+      state_msg["timelines"] = std::move(timelines);
     state_msg["time"] = ratio::to_json(exec.get_current_time());
     json::json executing_atoms(json::json_type::array);
     for (const auto &atm : exec.get_executing_atoms())
       executing_atoms.push_back(get_id(atm.get()));
-    state_msg["executing_atoms"] = std::move(executing_atoms);
+    if (!executing_atoms.get_array().empty())
+      state_msg["executing_atoms"] = std::move(executing_atoms);
     return state_msg;
   }
+
+  /**
+   * Creates a JSON tick message.
+   *
+   * This function creates a JSON message of type "tick" that contains the solver ID and the current time.
+   *
+   * @param exec The executor object.
+   * @return A JSON object representing the tick message.
+   */
+  inline json::json tick_message(const executor &exec) { return {{"type", "tick"}, {"solver_id", get_id(exec.get_solver())}, {"time", ratio::to_json(exec.get_current_time())}}; }
 #endif
 } // namespace ratio::executor

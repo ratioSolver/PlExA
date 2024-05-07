@@ -7,10 +7,17 @@ enable_testing()
 
 add_subdirectory(extern/solver)
 
+option(MULTIPLE_EXECUTORS "Enable multiple executors" OFF)
+
 add_library(PlExA src/executor.cpp src/executor_theory.cpp)
 add_dependencies(PlExA oRatioLib)
 target_link_libraries(PlExA PUBLIC oRatioLib)
 target_include_directories(PlExA PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
+
+message(STATUS "Enable multiple executors: ${MULTIPLE_EXECUTORS}")
+if(MULTIPLE_EXECUTORS)
+    target_compile_definitions(PlExA PUBLIC MULTIPLE_EXECUTORS)
+endif()
 
 if(MSVC)
     target_compile_options(PlExA PRIVATE /W4)
