@@ -279,13 +279,13 @@ namespace ratio::executor
     state_msg["id"] = get_id(exec.get_solver());
     state_msg["state"] = to_string(exec.get_state());
     auto timelines = to_timelines(exec.get_solver());
-    if (!timelines.get_array().empty())
+    if (!timelines.as_array().empty())
       state_msg["timelines"] = std::move(timelines);
     state_msg["time"] = ratio::to_json(exec.get_current_time());
     json::json executing_atoms(json::json_type::array);
     for (const auto &atm : exec.get_executing_atoms())
       executing_atoms.push_back(get_id(atm.get()));
-    if (!executing_atoms.get_array().empty())
+    if (!executing_atoms.as_array().empty())
       state_msg["executing_atoms"] = std::move(executing_atoms);
     return state_msg;
   }
