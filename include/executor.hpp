@@ -300,12 +300,13 @@ namespace ratio::executor
    */
   inline json::json tick_message(const executor &exec) { return {{"type", "tick"}, {"solver_id", get_id(exec.get_solver())}, {"time", ratio::to_json(exec.get_current_time())}}; }
 
-  const json::json executor_schema{"executor",
-                                   {{"type", "object"},
-                                    {"properties",
-                                     {{"id", {{"type", "string"}}},
-                                      {"name", {{"type", "string"}}},
-                                      {"state", {{"type", "string"}, {"enum", {"reasoning", "adapting", "idle", "executing", "finished", "failed"}}}}}},
-                                    {"required", {"id", "name", "state"}}}};
+  const json::json executor_message{"executor_message",
+                                    {"payload",
+                                     {{"type", "object"},
+                                      {"properties",
+                                       {{"id", {{"type", "string"}}},
+                                        {"name", {{"type", "string"}}},
+                                        {"state", {{"type", "string"}, {"enum", {"reasoning", "adapting", "idle", "executing", "finished", "failed"}}}}}},
+                                      {"required", {"id", "name", "state"}}}}};
 #endif
 } // namespace ratio::executor
