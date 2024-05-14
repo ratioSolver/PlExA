@@ -254,7 +254,7 @@ namespace ratio::executor
    * @param id The ID of the deleted executor.
    * @return A JSON object representing the deleted executor message.
    */
-  inline json::json deleted_executor_message(const uintptr_t id) { return {{"type", "deleted_executor"}, {"id", id}}; }
+  inline json::json make_deleted_executor_message(const uintptr_t id) { return {{"type", "deleted_executor"}, {"id", id}}; }
 
   /**
    * @brief Creates a JSON message indicating that the state of an executor has changed.
@@ -264,7 +264,7 @@ namespace ratio::executor
    * @param exec The executor object.
    * @return A JSON object representing the state changed message.
    */
-  inline json::json state_changed_message(const executor &exec) { return {{"type", "executor_state_changed"}, {"id", get_id(exec.get_solver())}, {"state", to_string(exec.get_state())}}; }
+  inline json::json make_state_changed_message(const executor &exec) { return {{"type", "executor_state_changed"}, {"id", get_id(exec.get_solver())}, {"state", to_string(exec.get_state())}}; }
 
   /**
    * Creates a JSON message representing the state of an executor.
