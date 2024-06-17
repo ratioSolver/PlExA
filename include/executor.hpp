@@ -239,10 +239,10 @@ namespace ratio::executor
    * @param exec The executor object.
    * @return A JSON object representing the new executor message.
    */
-  inline json::json make_executor_message(const executor &exec)
+  inline json::json make_new_solver_message(const executor &exec)
   {
     auto exec_msg = to_json(exec);
-    exec_msg["type"] = "new_executor";
+    exec_msg["type"] = "new_solver";
     return exec_msg;
   }
 
@@ -254,7 +254,7 @@ namespace ratio::executor
    * @param id The ID of the deleted executor.
    * @return A JSON object representing the deleted executor message.
    */
-  inline json::json make_deleted_executor_message(const uintptr_t id) { return {{"type", "deleted_executor"}, {"id", id}}; }
+  inline json::json make_deleted_solver_message(const uintptr_t id) { return {{"type", "deleted_solver"}, {"id", id}}; }
 
   /**
    * @brief Creates a JSON message indicating that the state of an executor has changed.
@@ -264,7 +264,7 @@ namespace ratio::executor
    * @param exec The executor object.
    * @return A JSON object representing the state changed message.
    */
-  inline json::json make_state_changed_message(const executor &exec) { return {{"type", "executor_state_changed"}, {"id", get_id(exec.get_solver())}, {"state", to_string(exec.get_state())}}; }
+  inline json::json make_solver_execution_state_changed_message(const executor &exec) { return {{"type", "solver_execution_state_changed"}, {"id", get_id(exec.get_solver())}, {"state", to_string(exec.get_state())}}; }
 
   /**
    * Creates a JSON message representing the state of an executor.
@@ -272,11 +272,12 @@ namespace ratio::executor
    * @param exec The executor object.
    * @return A JSON object representing the state of the executor.
    */
-  inline json::json make_state_message(const executor &exec)
+  inline json::json make_solver_state_message(const executor &exec)
   {
     auto state_msg = to_json(exec.get_solver());
     state_msg["type"] = "solver_state";
     state_msg["id"] = get_id(exec.get_solver());
+    state_msg["time"] = ratio::to_json(exec.get_current_time());
     auto timelines = to_timelines(exec.get_solver());
     if (!timelines.as_array().empty())
       state_msg["timelines"] = std::move(timelines);
@@ -298,24 +299,24 @@ namespace ratio::executor
    */
   inline json::json make_tick_message(const executor &exec) { return {{"type", "tick"}, {"solver_id", get_id(exec.get_solver())}, {"time", ratio::to_json(exec.get_current_time())}}; }
 
-  const json::json new_executor_message{"new_executor_message",
-                                        {"payload",
-                                         {{"type", "object"},
-                                          {"properties",
-                                           {{"type", {{"type", "string"}, {"enum", {"new_executor"}}}},
-                                            {"id", {{"type", "string"}}},
-                                            {"name", {{"type", "string"}}},
-                                            {"time", {{"$ref", "#/components/schemas/rational"}}},
-                                            {"state", {{"type", "string"}, {"enum", {"reasoning", "adapting", "idle", "executing", "finished", "failed"}}}}}},
-                                          {"required", {"id", "name", "state"}}}}};
-  const json::json executor_state_message{"executor_state_message",
-                                          {"payload",
-                                           {{"type", "object"},
-                                            {"properties",
-                                             {{"type", {{"type", "string"}, {"enum", {"executor_state"}}}},
-                                              {"id", {{"type", "string"}}},
-                                              {"state", {{"type", "string"}, {"enum", {"reasoning", "adapting", "idle", "executing", "finished", "failed"}}}}}},
-                                            {"required", std::vector<json::json>{"id", "state"}}}}};
+  const json::json new_solver_message{"new_solver_message",
+                                      {"payload",
+                                       {{"type", "object"},
+                                        {"properties",
+                                         {{"type", {{"type", "string"}, {"enum", {"new_solver"}}}},
+                                          {"id", {{"type", "string"}}},
+                                          {"name", {{"type", "string"}}},
+                                          {"time", {{"$ref", "#/components/schemas/rational"}}},
+                                          {"state", {{"type", "string"}, {"enum", {"reasoning", "adapting", "idle", "executing", "finished", "failed"}}}}}},
+                                        {"required", {"id", "name", "state"}}}}};
+  const json::json solver_execution_state_changed_message{"solver_execution_state_changed_message",
+                                                          {"payload",
+                                                           {{"type", "object"},
+                                                            {"properties",
+                                                             {{"type", {{"type", "string"}, {"enum", {"solver_execution_state_changed"}}}},
+                                                              {"id", {{"type", "string"}}},
+                                                              {"state", {{"type", "string"}, {"enum", {"reasoning", "adapting", "idle", "executing", "finished", "failed"}}}}}},
+                                                            {"required", std::vector<json::json>{"id", "state"}}}}};
   const json::json tick_message{"tick_message",
                                 {"payload",
                                  {{"type", "object"},
@@ -323,7 +324,7 @@ namespace ratio::executor
                                    {{"type", {{"type", "string"}, {"enum", {"tick"}}}},
                                     {"solver_id", {{"type", "string"}}},
                                     {"time", {{"$ref", "#/components/schemas/rational"}}}}}}}};
-  const json::json state_message{
+  const json::json solver_state_message{
       {"state_message",
        {"payload",
         {{"allOf",
@@ -331,6 +332,7 @@ namespace ratio::executor
          {"properties",
           {{"type", {{"type", "string"}, {"enum", {"solver_state"}}}},
            {"id", {{"type", "integer"}}},
+           {"time", {{"$ref", "#/components/schemas/rational"}}},
            {"timelines", {{"type", "array"}, {"items", {{"$ref", "#/components/schemas/timeline"}}}}},
            {"executing_atoms", {{"type", "array"}, {"description", "The IDs of the atoms that are currently executing."}, {"items", {{"type", "integer"}}}}}}}}}}};
 #endif
