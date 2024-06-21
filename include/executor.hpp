@@ -299,6 +299,13 @@ namespace ratio::executor
    */
   inline json::json make_tick_message(const executor &exec) { return {{"type", "tick"}, {"solver_id", get_id(exec.get_solver())}, {"time", ratio::to_json(exec.get_current_time())}}; }
 
+  const json::json solver_schema{"solver",
+                                 {{"type", "object"},
+                                  {"properties",
+                                   {{"id", {{"type", "string"}}},
+                                    {"name", {{"type", "string"}}},
+                                    {"time", {{"$ref", "#/components/schemas/rational"}}},
+                                    {"state", {{"type", "string"}, {"enum", {"reasoning", "adapting", "idle", "executing", "finished", "failed"}}}}}}}};
   const json::json new_solver_message{"new_solver_message",
                                       {"payload",
                                        {{"type", "object"},
