@@ -64,6 +64,14 @@ namespace ratio::executor
             return; // if not running, do nothing..
     }
 
+    void executor::failure(const std::unordered_set<const ratio::atom *> &atoms)
+    {
+#ifdef MULTIPLE_EXECUTORS
+        const std::lock_guard<std::mutex> lock(mtx);
+#endif
+        exec_theory.failure(atoms);
+    }
+
     void executor::executor_state_changed([[maybe_unused]] executor_state state) { LOG_DEBUG("[" << slv->get_name() << "] executor is now " << state); }
     void executor::tick([[maybe_unused]] const utils::rational &time) { LOG_DEBUG("[" << slv->get_name() << "] current time is " << to_string(time)); }
     void executor::starting([[maybe_unused]] const std::vector<std::reference_wrapper<const ratio::atom>> &atms) { LOG_DEBUG("[" << slv->get_name() << "] starting " << atms.size() << " atoms"); }

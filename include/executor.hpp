@@ -20,6 +20,12 @@ namespace ratio::executor
     Failed
   };
 
+  /**
+   * Converts an executor_state enum value to its corresponding string representation.
+   *
+   * @param state The executor_state value to convert.
+   * @return The string representation of the executor_state value.
+   */
   inline std::string to_string(executor_state state)
   {
     switch (state)
@@ -142,7 +148,7 @@ namespace ratio::executor
     void tick();
 
     /**
-     * Returns a vector of const references to the executing atoms.
+     * @brief Returns a vector of const references to the executing atoms.
      *
      * This function returns a vector containing const references to the atoms that are currently executing.
      * The references are wrapped in `std::reference_wrapper` to allow storing them in a vector.
@@ -156,6 +162,31 @@ namespace ratio::executor
         atoms.push_back(std::cref(*atm));
       return atoms;
     }
+
+    /**
+     * @brief Inserts the given atoms into the `dont_start` set.
+     * 
+     * This function inserts the given atoms into the `dont_start` set, which contains the atoms that are not yet ready to start. The solver will adapt the plan to delay the starting of these atoms.
+     *
+     * @param atoms The set of atoms which are not yet ready to start and the corresponding delay time.
+     */
+    void dont_start_yet(const std::unordered_map<const ratio::atom *, utils::rational> &atoms) { dont_start.insert(atoms.cbegin(), atoms.cend()); }
+    /**
+     * @brief Inserts the given atoms into the `dont_end` unordered map.
+     * 
+     * This function inserts the given atoms into the `dont_end` set, which contains the atoms that are not yet ready to end. The solver will adapt the plan to delay the ending of these atoms.
+     *
+     * @param atoms The set of atoms which are not yet ready to end and the corresponding delay time.
+     */
+    void dont_end_yet(const std::unordered_map<const ratio::atom *, utils::rational> &atoms) { dont_end.insert(atoms.cbegin(), atoms.cend()); }
+    /**
+     * @brief Notifies the executor that the given atoms have failed.
+     * 
+     * This function notifies the executor that the given atoms have failed. The solver will adapt the plan to handle the failure of these atoms.
+     * 
+     * @param atoms The set of atoms that have failed.
+     */
+    void failure(const std::unordered_set<const ratio::atom *> &atoms);
 
   private:
     /**
@@ -215,9 +246,11 @@ namespace ratio::executor
 #else
     bool running = false; // the execution state..
 #endif
-    bool pending_requirements = false;                 // whether there are pending requirements to be solved or not..
-    utils::rational current_time;                      // the current time in plan units..
-    std::unordered_set<const ratio::atom *> executing; // the atoms that are currently executing..
+    bool pending_requirements = false;                                   // whether there are pending requirements to be solved or not..
+    utils::rational current_time;                                        // the current time in plan units..
+    std::unordered_set<const ratio::atom *> executing;                   // the atoms that are currently executing..
+    std::unordered_map<const ratio::atom *, utils::rational> dont_start; // the starting atoms which are not yet ready to start..
+    std::unordered_map<const ratio::atom *, utils::rational> dont_end;   // the ending atoms which are not yet ready to end..
   };
 
 #ifdef ENABLE_VISUALIZATION

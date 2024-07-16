@@ -1,6 +1,6 @@
 #pragma once
 
-#include "theory.hpp"
+#include "solver.hpp"
 
 namespace ratio::executor
 {
@@ -12,6 +12,8 @@ namespace ratio::executor
     executor_theory(executor &exec) noexcept;
 
     void init() noexcept;
+
+    void failure(const std::unordered_set<const ratio::atom *> &atoms);
 
   private:
     bool propagate(const utils::lit &) noexcept override { return true; }
