@@ -11,14 +11,7 @@ option(MULTIPLE_EXECUTORS "Enable multiple executors" OFF)
 
 option(ENABLE_API "PlExA API" OFF)
 
-set(PLEXA_SOURCES src/executor.cpp src/executor_theory.cpp)
-
-message(STATUS "PlExA API: ${ENABLE_API}")
-if(ENABLE_API)
-    list(APPEND PLEXA_SOURCES src/executor_api.cpp)
-endif()
-
-add_library(PlExA ${PLEXA_SOURCES})
+add_library(PlExA src/executor.cpp src/executor_theory.cpp $<$<BOOL:${ENABLE_API}>:${CMAKE_CURRENT_SOURCE_DIR}/src/executor_api.cpp>)
 add_dependencies(PlExA oRatioLib)
 target_link_libraries(PlExA PUBLIC oRatioLib)
 target_include_directories(PlExA PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
@@ -27,6 +20,8 @@ message(STATUS "Enable multiple executors: ${MULTIPLE_EXECUTORS}")
 if(MULTIPLE_EXECUTORS)
     target_compile_definitions(PlExA PUBLIC MULTIPLE_EXECUTORS)
 endif()
+
+message(STATUS "PlExA API: ${ENABLE_API}")
 
 if(MSVC)
     target_compile_options(PlExA PRIVATE /W4)
