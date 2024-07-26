@@ -9,7 +9,16 @@ add_subdirectory(extern/solver)
 
 option(MULTIPLE_EXECUTORS "Enable multiple executors" OFF)
 
-add_library(PlExA src/executor.cpp src/executor_theory.cpp)
+option(ENABLE_API "PlExA API" OFF)
+
+set(PLEXA_SOURCES src/executor.cpp src/executor_theory.cpp)
+
+message(STATUS "PlExA API: ${ENABLE_API}")
+if(ENABLE_API)
+    list(APPEND PLEXA_SOURCES src/executor_api.cpp)
+endif()
+
+add_library(PlExA ${PLEXA_SOURCES})
 add_dependencies(PlExA oRatioLib)
 target_link_libraries(PlExA PUBLIC oRatioLib)
 target_include_directories(PlExA PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
