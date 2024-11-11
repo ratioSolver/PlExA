@@ -5,6 +5,8 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=undefined")
 include(CTest)
 enable_testing()
 
+set(BUILD_EXECUTABLE OFF CACHE BOOL "Build oRatio executable")
+
 add_subdirectory(extern/solver)
 
 option(MULTIPLE_EXECUTORS "Enable multiple executors" OFF)
