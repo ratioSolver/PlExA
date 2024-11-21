@@ -11,6 +11,35 @@ namespace ratio::executor
 {
   class executor_theory;
 
+  struct atom_adaptation
+  {
+    struct item_bounds
+    {
+      virtual ~item_bounds() = default;
+    };
+
+    struct bool_bounds : public item_bounds
+    {
+      bool_bounds(const utils::lbool &val) : val(val) {}
+      const utils::lbool val;
+    };
+    struct arith_bounds : public item_bounds
+    {
+      arith_bounds(const utils::inf_rational &lb, const utils::inf_rational &ub) : lb(lb), ub(ub) {}
+      utils::inf_rational lb, ub;
+    };
+    struct var_bounds : public item_bounds
+    {
+      var_bounds(utils::enum_val &val) : val(val) {}
+      utils::enum_val &val;
+    };
+
+    atom_adaptation(const utils::lit &sigma_xi) : sigma_xi(sigma_xi) {}
+
+    utils::lit sigma_xi;
+    std::unordered_map<riddle::item *, std::unique_ptr<item_bounds>> bounds;
+  };
+
   /**
    * @class executor
    * @brief Represents an executor for solving and executing atoms.
@@ -172,14 +201,14 @@ namespace ratio::executor
      *
      * @param atms The atoms that are starting.
      */
-    virtual void starting(const std::vector<std::reference_wrapper<const ratio::atom>> &atms);
+    virtual void starting(const std::vector<std::reference_wrapper<ratio::atom>> &atms);
 
     /**
      * @brief Called when the executor started some atoms.
      *
      * @param atms The atoms that are started.
      */
-    virtual void start(const std::vector<std::reference_wrapper<const ratio::atom>> &atms);
+    virtual void start(const std::vector<std::reference_wrapper<ratio::atom>> &atms);
 
     /**
      * @brief Called when the executor is ending some atoms.
@@ -188,32 +217,47 @@ namespace ratio::executor
      *
      * @param atms The atoms that are ending.
      */
-    virtual void ending(const std::vector<std::reference_wrapper<const ratio::atom>> &atms);
+    virtual void ending(const std::vector<std::reference_wrapper<ratio::atom>> &atms);
 
     /**
      * @brief Called when the executor ended some atoms.
      *
      * @param atms The atoms that ended.
      */
-    virtual void end(const std::vector<std::reference_wrapper<const ratio::atom>> &atms);
+    virtual void end(const std::vector<std::reference_wrapper<ratio::atom>> &atms);
+
+  private:
+    void build_timelines();
+
+    void reset_relevant_predicates();
 
   protected:
     std::shared_ptr<ratio::solver> slv; // the solver..
 
   private:
-    executor_theory &exec_theory;                     // the executor theory..
-    executor_state state = executor_state::Reasoning; // the current state of the executor..
-    const utils::rational units_per_tick;             // the number of plan units for each tick..
+    executor_theory &exec_theory;                                      // the executor theory..
+    executor_state state = executor_state::Reasoning;                  // the current state of the executor..
+    std::unordered_set<const riddle::predicate *> relevant_predicates; // impulses and intervals..
+    const utils::rational units_per_tick;                              // the number of plan units for each tick..
+    utils::lit xi;                                                     // the execution variable..
 #ifdef MULTIPLE_EXECUTORS
     std::mutex mtx;                    // the mutex for the critical sections..
     std::atomic<bool> running = false; // the running state..
 #else
     bool running = false; // the execution state..
 #endif
-    bool pending_requirements = false;                                   // whether there are pending requirements to be solved or not..
-    utils::rational current_time;                                        // the current time in plan units..
-    std::unordered_set<const ratio::atom *> executing;                   // the atoms that are currently executing..
-    std::unordered_map<const ratio::atom *, utils::rational> dont_start; // the starting atoms which are not yet ready to start..
-    std::unordered_map<const ratio::atom *, utils::rational> dont_end;   // the ending atoms which are not yet ready to end..
+    bool pending_requirements = false;                                                              // whether there are pending requirements to be solved or not..
+    utils::rational current_time;                                                                   // the current time in plan units..
+    std::unordered_set<const ratio::atom *> executing;                                              // the atoms that are currently executing..
+    std::unordered_map<const ratio::atom *, atom_adaptation> adaptations;                           // for each atom, the numeric adaptations done during the executions (i.e., freezes and delays)..
+    std::unordered_map<const ratio::atom *, utils::rational> dont_start;                            // the starting atoms which are not yet ready to start..
+    std::unordered_map<const ratio::atom *, utils::rational> dont_end;                              // the ending atoms which are not yet ready to end..
+    std::map<utils::inf_rational, std::vector<std::reference_wrapper<ratio::atom>>> s_atms, e_atms; // for each pulse, the atoms starting/ending at that pulse..
+    std::set<utils::inf_rational> pulses;                                                           // all the pulses of the plan..
+  };
+
+  class execution_exception : public std::exception
+  {
+    const char *what() const noexcept override { return "the plan cannot be executed.."; }
   };
 } // namespace ratio::executor
