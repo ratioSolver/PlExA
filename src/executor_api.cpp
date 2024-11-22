@@ -54,5 +54,5 @@ namespace ratio::executor
         return state_msg;
     }
 
-    [[nodiscard]] json::json make_tick_message(const executor &exec) noexcept { return {{"type", "tick"}, {"solver_id", get_id(exec.get_solver())}, {"time", ratio::to_json(exec.get_current_time())}}; }
+    [[nodiscard]] json::json make_tick_message(const executor &exec) noexcept { return {{"type", "tick"}, {"id", get_id(exec.get_solver())}, {"time", ratio::to_json(exec.get_current_time())}}; }
 } // namespace ratio::executor

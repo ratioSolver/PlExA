@@ -67,7 +67,7 @@ namespace ratio::executor
         if (!running)
             return; // if not running, do nothing..
 
-        LOG_DEBUG("current time: " << to_string(current_time));
+        LOG_DEBUG("[" + slv->get_name() + "] current time: " << to_string(current_time));
     manage_tick:
         while (!pulses.empty() && *pulses.cbegin() <= current_time)
         { // we have something to do..
@@ -243,6 +243,7 @@ namespace ratio::executor
 
         // we update the current time..
         current_time += units_per_tick;
+        tick(current_time);
     }
 
     void executor::failure(const std::unordered_set<const ratio::atom *> &atoms)
