@@ -304,5 +304,25 @@ namespace ratio::executor
 
     void executor::reset_relevant_predicates()
     {
+        relevant_predicates.clear();
+        for (const auto &pred : slv->get_predicates())
+            if (is_impulse(pred.get()) || is_interval(pred.get()))
+                relevant_predicates.insert(&pred.get());
+        std::queue<riddle::component_type *> q;
+        for (const auto &tp : slv->get_types())
+            if (!tp.get().is_primitive())
+                if (auto ct = dynamic_cast<riddle::component_type *>(&tp.get()))
+                    q.push(ct);
+        while (!q.empty())
+        {
+            for (const auto &st : q.front()->get_types())
+                if (!st.get().is_primitive())
+                    if (auto ct = dynamic_cast<riddle::component_type *>(&st.get()))
+                        q.push(ct);
+            for (const auto &pred : q.front()->get_predicates())
+                if (is_impulse(pred.get()) || is_interval(pred.get()))
+                    relevant_predicates.insert(&pred.get());
+            q.pop();
+        }
     }
 } // namespace ratio::executor
