@@ -9,36 +9,8 @@
 
 namespace ratio::executor
 {
+  class solver;
   class executor_theory;
-
-  struct atom_adaptation
-  {
-    struct item_bounds
-    {
-      virtual ~item_bounds() = default;
-    };
-
-    struct bool_bounds : public item_bounds
-    {
-      bool_bounds(const utils::lbool &val) : val(val) {}
-      const utils::lbool val;
-    };
-    struct arith_bounds : public item_bounds
-    {
-      arith_bounds(const utils::inf_rational &lb, const utils::inf_rational &ub) : lb(lb), ub(ub) {}
-      utils::inf_rational lb, ub;
-    };
-    struct var_bounds : public item_bounds
-    {
-      var_bounds(utils::enum_val &val) : val(val) {}
-      utils::enum_val &val;
-    };
-
-    atom_adaptation(const utils::lit &sigma_xi) : sigma_xi(sigma_xi) {}
-
-    utils::lit sigma_xi;
-    std::unordered_map<riddle::item *, std::unique_ptr<item_bounds>> bounds;
-  };
 
   /**
    * @class executor
@@ -56,11 +28,13 @@ namespace ratio::executor
      *
      * This constructor initializes an executor object with the specified solver and units per tick.
      *
-     * @param slv A shared pointer to a `ratio::solver` object. Default is a newly created `ratio::solver` object.
+     * @param slv A shared pointer to a `ratio::executor::solver` object.
      * @param units_per_tick The number of units per tick. Default is `utils::rational::one`.
      */
-    executor(std::shared_ptr<ratio::solver> slv = std::make_shared<ratio::solver>(), const utils::rational &units_per_tick = utils::rational::one) noexcept;
+    executor(std::shared_ptr<solver> slv, const utils::rational &units_per_tick = utils::rational::one) noexcept;
     virtual ~executor() noexcept = default;
+
+    executor_theory &get_executor_theory() noexcept { return exec_theory; }
 
     /**
      * Initializes the executor.
@@ -249,7 +223,6 @@ namespace ratio::executor
     bool pending_requirements = false;                                               // whether there are pending requirements to be solved or not..
     utils::rational current_time;                                                    // the current time in plan units..
     std::unordered_set<const ratio::atom *> executing;                               // the atoms that are currently executing..
-    std::unordered_map<const ratio::atom *, atom_adaptation> adaptations;            // for each atom, the numeric adaptations done during the executions (i.e., freezes and delays)..
     std::unordered_map<const ratio::atom *, utils::rational> dont_start;             // the starting atoms which are not yet ready to start..
     std::unordered_map<const ratio::atom *, utils::rational> dont_end;               // the ending atoms which are not yet ready to end..
     std::map<utils::inf_rational, std::unordered_set<ratio::atom *>> s_atms, e_atms; // for each pulse, the atoms starting/ending at that pulse..

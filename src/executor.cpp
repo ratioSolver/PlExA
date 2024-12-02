@@ -5,7 +5,7 @@
 
 namespace ratio::executor
 {
-    executor::executor(std::shared_ptr<ratio::solver> slv, const utils::rational &units_per_tick) noexcept : slv(slv), exec_theory(slv->get_sat().new_theory<executor_theory>(*this)), units_per_tick(units_per_tick), xi(slv->get_sat().new_var()) {}
+    executor::executor(std::shared_ptr<solver> slv, const utils::rational &units_per_tick) noexcept : slv(slv), exec_theory(slv->get_sat().new_theory<executor_theory>(*this)), units_per_tick(units_per_tick), xi(slv->get_sat().new_var()) {}
 
     void executor::init()
     {
@@ -97,7 +97,7 @@ namespace ratio::executor
                         if (is_constant(static_cast<riddle::arith_item &>(xpr)))
                             throw execution_exception(); // we can't delay constants..
                         const auto lb = slv->arithmetic_value(static_cast<riddle::arith_item &>(xpr)) + (units_per_tick > at_atm->second ? units_per_tick : at_atm->second);
-                        auto [it, added] = adaptations.at(atm).bounds.emplace(&xpr, nullptr);
+                        auto [it, added] = exec_theory.adaptations.at(atm).bounds.emplace(&xpr, nullptr);
                         if (added)
                         { // we have to add new bounds..
                             const auto bnds = slv->bounds(static_cast<riddle::arith_item &>(xpr));
@@ -109,7 +109,7 @@ namespace ratio::executor
                         if (is_real(xpr))
                         { // we have a real variable..
                             auto var = static_cast<riddle::arith_item &>(xpr).get_value();
-                            if (!slv->get_lra_theory().set_lb(slv->get_lra_theory().new_var(std::move(var)), lb, {adaptations.at(atm).sigma_xi}))
+                            if (!slv->get_lra_theory().set_lb(slv->get_lra_theory().new_var(std::move(var)), lb, {exec_theory.adaptations.at(atm).sigma_xi}))
                                 throw execution_exception(); // we have a conflict..
                         }
                         else
@@ -125,7 +125,7 @@ namespace ratio::executor
                         if (is_constant(static_cast<riddle::arith_item &>(xpr)))
                             throw execution_exception(); // we can't delay constants
                         const auto lb = slv->arithmetic_value(static_cast<riddle::arith_item &>(xpr)) + (units_per_tick > at_atm->second ? units_per_tick : at_atm->second);
-                        auto [it, added] = adaptations.at(atm).bounds.emplace(&xpr, nullptr);
+                        auto [it, added] = exec_theory.adaptations.at(atm).bounds.emplace(&xpr, nullptr);
                         if (added)
                         { // we have to add new bounds..
                             const auto bnds = slv->bounds(static_cast<riddle::arith_item &>(xpr));
@@ -136,7 +136,7 @@ namespace ratio::executor
                         if (is_real(xpr))
                         { // we have a real variable..
                             auto lin = static_cast<riddle::arith_item &>(xpr).get_value();
-                            if (!slv->get_lra_theory().set_lb(slv->get_lra_theory().new_var(std::move(lin)), lb, {adaptations.at(atm).sigma_xi}))
+                            if (!slv->get_lra_theory().set_lb(slv->get_lra_theory().new_var(std::move(lin)), lb, {exec_theory.adaptations.at(atm).sigma_xi}))
                                 throw execution_exception(); // we have a conflict..
                         }
                         else
@@ -162,7 +162,7 @@ namespace ratio::executor
                             if (const auto bi = dynamic_cast<const riddle::bool_item *>(itm))
                             { // we store the propositional value..
                                 assert(slv->get_sat().value(bi->get_value()) != utils::Undefined);
-                                adaptations.at(atm).bounds.emplace(itm, new atom_adaptation::bool_bounds(slv->get_sat().value(bi->get_value())));
+                                exec_theory.adaptations.at(atm).bounds.emplace(itm, new atom_adaptation::bool_bounds(slv->get_sat().value(bi->get_value())));
                             }
                             else if (const auto ai = dynamic_cast<const riddle::arith_item *>(itm))
                             { // we store the arithmetic value and, if not a constant, we propagate also the bounds..
@@ -171,10 +171,10 @@ namespace ratio::executor
                                 if (&ai->get_type() == &slv->get_real_type())
                                 { // we have a real variable..
                                     const auto val = slv->get_lra_theory().value(ai->get_value());
-                                    adaptations.at(atm).bounds.emplace(itm, new atom_adaptation::arith_bounds(val, val));
+                                    exec_theory.adaptations.at(atm).bounds.emplace(itm, new atom_adaptation::arith_bounds(val, val));
                                     // we freeze the arithmetic value..
                                     auto lin = ai->get_value();
-                                    if (!slv->get_lra_theory().set_value(slv->get_lra_theory().new_var(std::move(lin)), val, {adaptations.at(atm).sigma_xi})) // freezing the arithmetic expression caused a conflict..
+                                    if (!slv->get_lra_theory().set_value(slv->get_lra_theory().new_var(std::move(lin)), val, {exec_theory.adaptations.at(atm).sigma_xi})) // freezing the arithmetic expression caused a conflict..
                                         throw execution_exception();
                                 }
                             }
@@ -182,7 +182,7 @@ namespace ratio::executor
                             { // we store the variable value..
                                 const auto vals = slv->get_ov_theory().domain(vi->get_value());
                                 assert(vals.size() == 1);
-                                adaptations.at(atm).bounds.emplace(itm, new atom_adaptation::var_bounds(vals.begin()->get()));
+                                exec_theory.adaptations.at(atm).bounds.emplace(itm, new atom_adaptation::var_bounds(vals.begin()->get()));
                             }
                         }
                 // we add the starting atoms to the set of atoms executing..
@@ -203,7 +203,7 @@ namespace ratio::executor
                         if (is_constant(at))
                             continue; // we have a constant: nothing to propagate..
                         const auto val = slv->arithmetic_value(static_cast<riddle::arith_item &>(at));
-                        auto [it, added] = adaptations.at(atm).bounds.emplace(&at, nullptr);
+                        auto [it, added] = exec_theory.adaptations.at(atm).bounds.emplace(&at, nullptr);
                         if (added) // we have to add new bounds..
                             it->second = std::make_unique<atom_adaptation::arith_bounds>(val, val);
                         else
@@ -214,7 +214,7 @@ namespace ratio::executor
                         if (is_real(at))
                         { // we have a real variable..
                             auto lin = static_cast<riddle::arith_item &>(at).get_value();
-                            if (!slv->get_lra_theory().set_value(slv->get_lra_theory().new_var(std::move(lin)), val, {adaptations.at(atm).sigma_xi})) // freezing the arithmetic expression caused a conflict..
+                            if (!slv->get_lra_theory().set_value(slv->get_lra_theory().new_var(std::move(lin)), val, {exec_theory.adaptations.at(atm).sigma_xi})) // freezing the arithmetic expression caused a conflict..
                                 throw execution_exception();
                         }
                         else
@@ -226,7 +226,7 @@ namespace ratio::executor
                         if (is_constant(end))
                             continue; // we have a constant: nothing to propagate..
                         const auto val = slv->arithmetic_value(static_cast<riddle::arith_item &>(end));
-                        auto [it, added] = adaptations.at(atm).bounds.emplace(&end, nullptr);
+                        auto [it, added] = exec_theory.adaptations.at(atm).bounds.emplace(&end, nullptr);
                         if (added) // we have to add new bounds..
                             std::make_unique<atom_adaptation::arith_bounds>(val, val);
                         else
@@ -237,7 +237,7 @@ namespace ratio::executor
                         if (is_real(end))
                         { // we have a real variable..
                             auto lin = static_cast<riddle::arith_item &>(end).get_value();
-                            if (!slv->get_lra_theory().set_value(slv->get_lra_theory().new_var(std::move(lin)), val, {adaptations.at(atm).sigma_xi})) // freezing the arithmetic expression caused a conflict..
+                            if (!slv->get_lra_theory().set_value(slv->get_lra_theory().new_var(std::move(lin)), val, {exec_theory.adaptations.at(atm).sigma_xi})) // freezing the arithmetic expression caused a conflict..
                                 throw execution_exception();
                         }
                         else
