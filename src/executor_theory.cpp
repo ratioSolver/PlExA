@@ -5,12 +5,12 @@
 
 namespace ratio::executor
 {
-    solver::solver(executor_theory &exec, const std::string &name) : ratio::solver(name), exec(exec) {}
+    solver::solver(executor &exec, const std::string &name) : ratio::solver(name), exec(exec) {}
 
     void solver::flaw_created(const ratio::flaw &f)
     {
         if (const auto af = dynamic_cast<const ratio::atom_flaw *>(&f))
-            exec.new_atom(static_cast<ratio::atom &>(*af->get_atom()));
+            exec.get_executor_theory().new_atom(static_cast<ratio::atom &>(*af->get_atom()));
     }
 
     executor_theory::executor_theory(executor &exec) noexcept : exec(exec), xi(exec.get_solver().get_sat().new_var()) {}

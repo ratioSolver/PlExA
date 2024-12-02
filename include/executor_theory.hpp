@@ -10,13 +10,13 @@ namespace ratio::executor
   class solver : public ratio::solver
   {
   public:
-    solver(executor_theory &exec, const std::string &name);
+    solver(executor &exec, const std::string &name);
 
   protected:
     void flaw_created(const ratio::flaw &f) override;
 
   private:
-    executor_theory &exec;
+    executor &exec;
   };
 
   struct atom_adaptation
