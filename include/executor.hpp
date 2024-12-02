@@ -246,14 +246,14 @@ namespace ratio::executor
 #else
     bool running = false; // the execution state..
 #endif
-    bool pending_requirements = false;                                                              // whether there are pending requirements to be solved or not..
-    utils::rational current_time;                                                                   // the current time in plan units..
-    std::unordered_set<const ratio::atom *> executing;                                              // the atoms that are currently executing..
-    std::unordered_map<const ratio::atom *, atom_adaptation> adaptations;                           // for each atom, the numeric adaptations done during the executions (i.e., freezes and delays)..
-    std::unordered_map<const ratio::atom *, utils::rational> dont_start;                            // the starting atoms which are not yet ready to start..
-    std::unordered_map<const ratio::atom *, utils::rational> dont_end;                              // the ending atoms which are not yet ready to end..
-    std::map<utils::inf_rational, std::vector<std::reference_wrapper<ratio::atom>>> s_atms, e_atms; // for each pulse, the atoms starting/ending at that pulse..
-    std::set<utils::inf_rational> pulses;                                                           // all the pulses of the plan..
+    bool pending_requirements = false;                                               // whether there are pending requirements to be solved or not..
+    utils::rational current_time;                                                    // the current time in plan units..
+    std::unordered_set<const ratio::atom *> executing;                               // the atoms that are currently executing..
+    std::unordered_map<const ratio::atom *, atom_adaptation> adaptations;            // for each atom, the numeric adaptations done during the executions (i.e., freezes and delays)..
+    std::unordered_map<const ratio::atom *, utils::rational> dont_start;             // the starting atoms which are not yet ready to start..
+    std::unordered_map<const ratio::atom *, utils::rational> dont_end;               // the ending atoms which are not yet ready to end..
+    std::map<utils::inf_rational, std::unordered_set<ratio::atom *>> s_atms, e_atms; // for each pulse, the atoms starting/ending at that pulse..
+    std::set<utils::inf_rational> pulses;                                            // all the pulses of the plan..
   };
 
   class execution_exception : public std::exception
