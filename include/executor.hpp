@@ -1,117 +1,41 @@
 #pragma once
 
-#include "solver.hpp"
-#include "executor_state.hpp"
-#ifdef MULTIPLE_EXECUTORS
+#include "inf_rational.hpp"
+#include "item.hpp"
 #include <mutex>
 #include <atomic>
-#endif
+#include <unordered_set>
+#include <unordered_map>
+#include <map>
 
 namespace ratio::executor
 {
-  class solver;
-  class executor_theory;
+  enum executor_state
+  {
+    Reasoning,
+    Idle,
+    Adapting,
+    Executing,
+    Finished,
+    Failed
+  };
 
-  /**
-   * @class executor
-   * @brief Represents an executor for solving and executing atoms.
-   *
-   * The `executor` class is responsible for managing the execution of atoms and solving the associated constraints.
-   * It provides methods for initializing the executor, accessing the solver object, retrieving the executor state,
-   * getting the current time, and obtaining information about the executing atoms.
-   */
   class executor
   {
   public:
-    /**
-     * @brief Constructs an executor object.
-     *
-     * This constructor initializes an executor object with the specified solver and units per tick.
-     *
-     * @param slv A shared pointer to a `ratio::executor::solver` object.
-     * @param units_per_tick The number of units per tick. Default is `utils::rational::one`.
-     */
-    executor(std::shared_ptr<solver> slv, const utils::rational &units_per_tick = utils::rational::one) noexcept;
-    virtual ~executor() noexcept = default;
+    executor(const utils::rational &units_per_tick = utils::rational::one);
+    virtual ~executor() = default;
 
-    executor_theory &get_executor_theory() noexcept { return exec_theory; }
-
-    /**
-     * Initializes the executor.
-     */
-    void init();
-
-    /**
-     * Returns a reference to the solver object.
-     *
-     * @return A reference to the solver object.
-     */
-    ratio::solver &get_solver() noexcept { return *slv; }
-    /**
-     * Returns a reference to the solver object.
-     *
-     * @return A reference to the solver object.
-     */
-    const ratio::solver &get_solver() const noexcept { return *slv; }
-    /**
-     * @brief Get the state of the executor.
-     *
-     * @return The state of the executor.
-     */
-    executor_state get_state() const noexcept { return state; }
-    /**
-     * Returns the current time.
-     *
-     * @return A reference to the current time.
-     */
-    const utils::rational &get_current_time() const noexcept { return current_time; }
-
-    /**
-     * @brief Adapts the planning problem taking into account the given RiDDLe script.
-     *
-     * This function adapts the planning problem by taking into account the given RiDDLe script.
-     *
-     * @param script The RiDDLe script to adapt the planning problem.
-     */
     void adapt(const std::string &script);
-    /**
-     * @brief Adapts the planning problem taking into account the given RiDDLe files.
-     *
-     * This function adapts the planning problem by taking into account the given RiDDLe files.
-     *
-     * @param files The RiDDLe files to adapt the planning problem.
-     */
     void adapt(const std::vector<std::string> &files);
 
-    /**
-     * @brief Checks if the executor is currently running.
-     *
-     * @return true if the executor is running, false otherwise.
-     */
-    bool is_running() const noexcept { return running; }
+    [[nodiscard]] bool is_running() const noexcept { return running; }
+    [[nodiscard]] executor_state get_state() const noexcept { return state; }
+    [[nodiscard]] utils::rational get_current_time() const noexcept { return current_time; }
 
-    /**
-     * @brief Starts the executor.
-     *
-     * This function starts the executor and sets the state to `Executing`.
-     */
     void start();
-
-    /**
-     * @brief Pauses the executor.
-     *
-     * This function pauses the executor and sets the state to `Idle`.
-     */
     void pause();
 
-    /**
-     * @brief Executes a single tick of the executor.
-     *
-     * This function performs a single iteration of the executor's main loop.
-     * It is responsible for executing any pending tasks or events.
-     *
-     * @note This function should be called periodically to ensure proper execution of the executor.
-     */
     void tick();
 
     /**
@@ -122,9 +46,9 @@ namespace ratio::executor
      *
      * @return A vector of const references to the executing atoms.
      */
-    std::vector<std::reference_wrapper<const ratio::atom>> get_executing_atoms() const noexcept
+    std::vector<std::reference_wrapper<const riddle::atom>> get_executing_atoms() const noexcept
     {
-      std::vector<std::reference_wrapper<const ratio::atom>> atoms;
+      std::vector<std::reference_wrapper<const riddle::atom>> atoms;
       for (const auto &atm : executing)
         atoms.push_back(std::cref(*atm));
       return atoms;
@@ -137,7 +61,7 @@ namespace ratio::executor
      *
      * @param atoms The set of atoms which are not yet ready to start and the corresponding delay time.
      */
-    void dont_start_yet(const std::unordered_map<const ratio::atom *, utils::rational> &atoms) { dont_start.insert(atoms.cbegin(), atoms.cend()); }
+    void dont_start_yet(const std::unordered_map<const riddle::atom *, utils::rational> &atoms) { dont_start.insert(atoms.cbegin(), atoms.cend()); }
     /**
      * @brief Inserts the given atoms into the `dont_end` unordered map.
      *
@@ -145,7 +69,7 @@ namespace ratio::executor
      *
      * @param atoms The set of atoms which are not yet ready to end and the corresponding delay time.
      */
-    void dont_end_yet(const std::unordered_map<const ratio::atom *, utils::rational> &atoms) { dont_end.insert(atoms.cbegin(), atoms.cend()); }
+    void dont_end_yet(const std::unordered_map<const riddle::atom *, utils::rational> &atoms) { dont_end.insert(atoms.cbegin(), atoms.cend()); }
     /**
      * @brief Notifies the executor that the given atoms have failed.
      *
@@ -153,20 +77,20 @@ namespace ratio::executor
      *
      * @param atoms The set of atoms that have failed.
      */
-    void failure(const std::unordered_set<const ratio::atom *> &atoms);
+    void failure(const std::unordered_set<const riddle::atom *> &atoms);
 
   private:
     /**
      * @brief Called when the state of the executor changes.
      */
-    virtual void executor_state_changed(executor_state state);
+    virtual void executor_state_changed([[maybe_unused]] executor_state state) {}
 
     /**
      * @brief Called each time the executor is ticked.
      *
      * @param time The current time in plan units.
      */
-    virtual void tick(const utils::rational &time);
+    virtual void tick([[maybe_unused]] const utils::rational &time) {}
 
     /**
      * @brief Called when the executor is starting some atoms.
@@ -175,14 +99,14 @@ namespace ratio::executor
      *
      * @param atms The atoms that are starting.
      */
-    virtual void starting(const std::vector<std::reference_wrapper<ratio::atom>> &atms);
+    virtual void starting([[maybe_unused]] const std::vector<std::reference_wrapper<riddle::atom>> &atms) {}
 
     /**
      * @brief Called when the executor started some atoms.
      *
      * @param atms The atoms that are started.
      */
-    virtual void start(const std::vector<std::reference_wrapper<ratio::atom>> &atms);
+    virtual void start([[maybe_unused]] const std::vector<std::reference_wrapper<riddle::atom>> &atms) {}
 
     /**
      * @brief Called when the executor is ending some atoms.
@@ -191,46 +115,25 @@ namespace ratio::executor
      *
      * @param atms The atoms that are ending.
      */
-    virtual void ending(const std::vector<std::reference_wrapper<ratio::atom>> &atms);
+    virtual void ending([[maybe_unused]] const std::vector<std::reference_wrapper<riddle::atom>> &atms) {}
 
     /**
      * @brief Called when the executor ended some atoms.
      *
      * @param atms The atoms that ended.
      */
-    virtual void end(const std::vector<std::reference_wrapper<ratio::atom>> &atms);
+    virtual void end([[maybe_unused]] const std::vector<std::reference_wrapper<riddle::atom>> &atms) {}
 
   private:
-    void build_timelines();
-
-    void reset_relevant_predicates();
-
-  protected:
-    std::shared_ptr<ratio::solver> slv; // the solver..
-
-  private:
-    executor_theory &exec_theory;                                      // the executor theory..
-    executor_state state = executor_state::Reasoning;                  // the current state of the executor..
-    std::unordered_set<const riddle::predicate *> relevant_predicates; // impulses and intervals..
-    const utils::rational units_per_tick;                              // the number of plan units for each tick..
-    utils::lit xi;                                                     // the execution variable..
-#ifdef MULTIPLE_EXECUTORS
-    std::mutex mtx;                    // the mutex for the critical sections..
-    std::atomic<bool> running = false; // the running state..
-#else
-    bool running = false; // the execution state..
-#endif
-    bool pending_requirements = false;                                               // whether there are pending requirements to be solved or not..
-    utils::rational current_time;                                                    // the current time in plan units..
-    std::unordered_set<const ratio::atom *> executing;                               // the atoms that are currently executing..
-    std::unordered_map<const ratio::atom *, utils::rational> dont_start;             // the starting atoms which are not yet ready to start..
-    std::unordered_map<const ratio::atom *, utils::rational> dont_end;               // the ending atoms which are not yet ready to end..
-    std::map<utils::inf_rational, std::unordered_set<ratio::atom *>> s_atms, e_atms; // for each pulse, the atoms starting/ending at that pulse..
-    std::set<utils::inf_rational> pulses;                                            // all the pulses of the plan..
-  };
-
-  class execution_exception : public std::exception
-  {
-    const char *what() const noexcept override { return "the plan cannot be executed.."; }
+    std::mutex mtx;                                                                                            // the mutex for the critical sections..
+    std::atomic<bool> running = false;                                                                         // the running state..
+    executor_state state = executor_state::Reasoning;                                                          // the current state of the executor..
+    const utils::rational units_per_tick;                                                                      // the number of plan units for each tick..
+    bool pending_requirements = false;                                                                         // whether there are pending requirements to be solved or not..
+    utils::rational current_time;                                                                              // the current time in plan units..
+    std::unordered_set<const riddle::atom *> executing;                                                        // the atoms that are currently executing..
+    std::unordered_map<const riddle::atom *, utils::rational> dont_start;                                      // the starting atoms which are not yet ready to start..
+    std::unordered_map<const riddle::atom *, utils::rational> dont_end;                                        // the ending atoms which are not yet ready to end..
+    std::map<utils::inf_rational, std::pair<std::vector<riddle::atom *>, std::vector<riddle::atom *>>> pulses; // the pulses of the executor, with the starting and ending atoms..
   };
 } // namespace ratio::executor
