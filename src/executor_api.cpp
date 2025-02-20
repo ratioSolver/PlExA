@@ -24,7 +24,7 @@ namespace ratio::executor
         }
     }
 
-    [[nodiscard]] json::json to_json(const executor &exec) noexcept { return {{"id", get_id(exec.get_solver())}, {"name", exec.get_solver().get_name()}, {"time", ratio::to_json(exec.get_current_time())}, {"state", to_string(exec.get_state())}}; }
+    [[nodiscard]] json::json to_json(const executor &exec) noexcept { return {{"id", get_id(exec.get_solver())}, {"name", exec.get_solver().get_name().c_str()}, {"time", ratio::to_json(exec.get_current_time())}, {"state", to_string(exec.get_state())}}; }
 
     [[nodiscard]] json::json make_new_solver_message(const executor &exec) noexcept
     {
