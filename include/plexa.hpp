@@ -20,11 +20,11 @@ namespace ratio::executor
     Failed
   };
 
-  class executor
+  class plexa
   {
   public:
-    executor(const utils::rational &units_per_tick = utils::rational::one);
-    virtual ~executor() = default;
+    plexa(const utils::rational &units_per_tick = utils::rational::one);
+    virtual ~plexa() = default;
 
     void adapt(const std::string &script);
     void adapt(const std::vector<std::string> &files);
@@ -83,14 +83,14 @@ namespace ratio::executor
     /**
      * @brief Called when the state of the executor changes.
      */
-    virtual void executor_state_changed([[maybe_unused]] executor_state state) {}
+    virtual void executor_state_changed(executor_state) {}
 
     /**
      * @brief Called each time the executor is ticked.
      *
      * @param time The current time in plan units.
      */
-    virtual void tick([[maybe_unused]] const utils::rational &time) {}
+    virtual void tick(const utils::rational &) {}
 
     /**
      * @brief Called when the executor is starting some atoms.
@@ -99,14 +99,14 @@ namespace ratio::executor
      *
      * @param atms The atoms that are starting.
      */
-    virtual void starting([[maybe_unused]] const std::vector<utils::ref_wrapper<riddle::atom_term>> &atms) {}
+    virtual void starting(const std::vector<utils::ref_wrapper<riddle::atom_term>> &) {}
 
     /**
      * @brief Called when the executor started some atoms.
      *
      * @param atms The atoms that are started.
      */
-    virtual void start([[maybe_unused]] const std::vector<utils::ref_wrapper<riddle::atom_term>> &atms) {}
+    virtual void start(const std::vector<utils::ref_wrapper<riddle::atom_term>> &) {}
 
     /**
      * @brief Called when the executor is ending some atoms.
@@ -115,14 +115,14 @@ namespace ratio::executor
      *
      * @param atms The atoms that are ending.
      */
-    virtual void ending([[maybe_unused]] const std::vector<utils::ref_wrapper<riddle::atom_term>> &atms) {}
+    virtual void ending(const std::vector<utils::ref_wrapper<riddle::atom_term>> &) {}
 
     /**
      * @brief Called when the executor ended some atoms.
      *
      * @param atms The atoms that ended.
      */
-    virtual void end([[maybe_unused]] const std::vector<utils::ref_wrapper<riddle::atom_term>> &atms) {}
+    virtual void end(const std::vector<utils::ref_wrapper<riddle::atom_term>> &) {}
 
   private:
     std::mutex mtx;                                                                                                      // the mutex for the critical sections..

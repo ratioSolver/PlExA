@@ -2,5 +2,5 @@
 
 namespace ratio::executor
 {
-    stexecutor::stexecutor(const utils::rational &units_per_tick) noexcept : executor(units_per_tick) {}
+    executor::executor(const utils::rational &units_per_tick) noexcept : plexa(units_per_tick) {}
 } // namespace ratio::executor

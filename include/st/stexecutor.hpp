@@ -1,12 +1,13 @@
 #pragma once
 
-#include "executor.hpp"
+#include "plexa.hpp"
+#include "stsolver.hpp"
 
 namespace ratio::executor
 {
-  class stexecutor : public executor
+  class executor : public plexa, public ratio::solver
   {
   public:
-    stexecutor(const utils::rational &units_per_tick = utils::rational::one) noexcept;
+    executor(const utils::rational &units_per_tick = utils::rational::one) noexcept;
   };
 } // namespace ratio::executor

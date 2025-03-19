@@ -10,7 +10,7 @@
 void test_basic_exec()
 {
 #if defined(SEMITONE)
-    ratio::executor::stexecutor exec;
+    ratio::executor::executor exec;
 #elif defined(MathSAT)
     ratio::executor::msatexecutor slv;
 #elif defined(Z3)

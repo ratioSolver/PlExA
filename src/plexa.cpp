@@ -1,16 +1,16 @@
-#include "executor.hpp"
+#include "plexa.hpp"
 
 namespace ratio::executor
 {
-    executor::executor(const utils::rational &units_per_tick) : units_per_tick(units_per_tick) {}
+    plexa::plexa(const utils::rational &units_per_tick) : units_per_tick(units_per_tick) {}
 
-    void executor::start()
+    void plexa::start()
     {
         running = true;
         executor_state_changed(state = executor_state::Executing);
     }
 
-    void executor::pause()
+    void plexa::pause()
     {
         running = false;
         executor_state_changed(state = executor_state::Idle);
