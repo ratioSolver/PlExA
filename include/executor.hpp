@@ -1,7 +1,7 @@
 #pragma once
 
 #include "inf_rational.hpp"
-#include "item.hpp"
+#include "term.hpp"
 #include <mutex>
 #include <atomic>
 #include <unordered_set>
@@ -42,15 +42,15 @@ namespace ratio::executor
      * @brief Returns a vector of const references to the executing atoms.
      *
      * This function returns a vector containing const references to the atoms that are currently executing.
-     * The references are wrapped in `std::reference_wrapper` to allow storing them in a vector.
+     * The references are wrapped in `utils::ref_wrapper` to allow storing them in a vector.
      *
      * @return A vector of const references to the executing atoms.
      */
-    std::vector<std::reference_wrapper<const riddle::atom>> get_executing_atoms() const noexcept
+    std::vector<utils::ref_wrapper<const riddle::atom_term>> get_executing_atoms() const noexcept
     {
-      std::vector<std::reference_wrapper<const riddle::atom>> atoms;
+      std::vector<utils::ref_wrapper<const riddle::atom_term>> atoms;
       for (const auto &atm : executing)
-        atoms.push_back(std::cref(*atm));
+        atoms.push_back(*atm);
       return atoms;
     }
 
@@ -61,7 +61,7 @@ namespace ratio::executor
      *
      * @param atoms The set of atoms which are not yet ready to start and the corresponding delay time.
      */
-    void dont_start_yet(const std::unordered_map<const riddle::atom *, utils::rational> &atoms) { dont_start.insert(atoms.cbegin(), atoms.cend()); }
+    void dont_start_yet(const std::unordered_map<const riddle::atom_term *, utils::rational> &atoms) { dont_start.insert(atoms.cbegin(), atoms.cend()); }
     /**
      * @brief Inserts the given atoms into the `dont_end` unordered map.
      *
@@ -69,7 +69,7 @@ namespace ratio::executor
      *
      * @param atoms The set of atoms which are not yet ready to end and the corresponding delay time.
      */
-    void dont_end_yet(const std::unordered_map<const riddle::atom *, utils::rational> &atoms) { dont_end.insert(atoms.cbegin(), atoms.cend()); }
+    void dont_end_yet(const std::unordered_map<const riddle::atom_term *, utils::rational> &atoms) { dont_end.insert(atoms.cbegin(), atoms.cend()); }
     /**
      * @brief Notifies the executor that the given atoms have failed.
      *
@@ -77,7 +77,7 @@ namespace ratio::executor
      *
      * @param atoms The set of atoms that have failed.
      */
-    void failure(const std::unordered_set<const riddle::atom *> &atoms);
+    void failure(const std::unordered_set<const riddle::atom_term *> &atoms);
 
   private:
     /**
@@ -99,14 +99,14 @@ namespace ratio::executor
      *
      * @param atms The atoms that are starting.
      */
-    virtual void starting([[maybe_unused]] const std::vector<std::reference_wrapper<riddle::atom>> &atms) {}
+    virtual void starting([[maybe_unused]] const std::vector<utils::ref_wrapper<riddle::atom_term>> &atms) {}
 
     /**
      * @brief Called when the executor started some atoms.
      *
      * @param atms The atoms that are started.
      */
-    virtual void start([[maybe_unused]] const std::vector<std::reference_wrapper<riddle::atom>> &atms) {}
+    virtual void start([[maybe_unused]] const std::vector<utils::ref_wrapper<riddle::atom_term>> &atms) {}
 
     /**
      * @brief Called when the executor is ending some atoms.
@@ -115,25 +115,25 @@ namespace ratio::executor
      *
      * @param atms The atoms that are ending.
      */
-    virtual void ending([[maybe_unused]] const std::vector<std::reference_wrapper<riddle::atom>> &atms) {}
+    virtual void ending([[maybe_unused]] const std::vector<utils::ref_wrapper<riddle::atom_term>> &atms) {}
 
     /**
      * @brief Called when the executor ended some atoms.
      *
      * @param atms The atoms that ended.
      */
-    virtual void end([[maybe_unused]] const std::vector<std::reference_wrapper<riddle::atom>> &atms) {}
+    virtual void end([[maybe_unused]] const std::vector<utils::ref_wrapper<riddle::atom_term>> &atms) {}
 
   private:
-    std::mutex mtx;                                                                                            // the mutex for the critical sections..
-    std::atomic<bool> running = false;                                                                         // the running state..
-    executor_state state = executor_state::Reasoning;                                                          // the current state of the executor..
-    const utils::rational units_per_tick;                                                                      // the number of plan units for each tick..
-    bool pending_requirements = false;                                                                         // whether there are pending requirements to be solved or not..
-    utils::rational current_time;                                                                              // the current time in plan units..
-    std::unordered_set<const riddle::atom *> executing;                                                        // the atoms that are currently executing..
-    std::unordered_map<const riddle::atom *, utils::rational> dont_start;                                      // the starting atoms which are not yet ready to start..
-    std::unordered_map<const riddle::atom *, utils::rational> dont_end;                                        // the ending atoms which are not yet ready to end..
-    std::map<utils::inf_rational, std::pair<std::vector<riddle::atom *>, std::vector<riddle::atom *>>> pulses; // the pulses of the executor, with the starting and ending atoms..
+    std::mutex mtx;                                                                                                      // the mutex for the critical sections..
+    std::atomic<bool> running = false;                                                                                   // the running state..
+    executor_state state = executor_state::Reasoning;                                                                    // the current state of the executor..
+    const utils::rational units_per_tick;                                                                                // the number of plan units for each tick..
+    bool pending_requirements = false;                                                                                   // whether there are pending requirements to be solved or not..
+    utils::rational current_time;                                                                                        // the current time in plan units..
+    std::unordered_set<const riddle::atom_term *> executing;                                                             // the atoms that are currently executing..
+    std::unordered_map<const riddle::atom_term *, utils::rational> dont_start;                                           // the starting atoms which are not yet ready to start..
+    std::unordered_map<const riddle::atom_term *, utils::rational> dont_end;                                             // the ending atoms which are not yet ready to end..
+    std::map<utils::inf_rational, std::pair<std::vector<riddle::atom_term *>, std::vector<riddle::atom_term *>>> pulses; // the pulses of the executor, with the starting and ending atoms..
   };
 } // namespace ratio::executor
