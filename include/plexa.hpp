@@ -26,8 +26,7 @@ namespace ratio::executor
     plexa(const utils::rational &units_per_tick = utils::rational::one);
     virtual ~plexa() = default;
 
-    void adapt(const std::string &script);
-    void adapt(const std::vector<std::string> &files);
+    virtual void adapt(const std::string &script) = 0;
 
     [[nodiscard]] bool is_running() const noexcept { return running; }
     [[nodiscard]] executor_state get_state() const noexcept { return state; }
@@ -77,7 +76,7 @@ namespace ratio::executor
      *
      * @param atoms The set of atoms that have failed.
      */
-    void failure(const std::unordered_set<const riddle::atom_term *> &atoms);
+    virtual void failure(const std::unordered_set<const riddle::atom_term *> &atoms) = 0;
 
   private:
     /**

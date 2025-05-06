@@ -5,9 +5,13 @@
 
 namespace ratio::executor
 {
-  class executor : public plexa, public ratio::solver
+  class executor : public ratio::solver, public plexa
   {
   public:
-    executor(const utils::rational &units_per_tick = utils::rational::one) noexcept;
+    executor(std::string_view name = "oRatio", const utils::rational &units_per_tick = utils::rational::one) noexcept;
+
+    void adapt(const std::string &script) override;
+
+    void failure(const std::unordered_set<const riddle::atom_term *> &atoms) override;
   };
 } // namespace ratio::executor

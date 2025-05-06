@@ -15,4 +15,8 @@ namespace ratio::executor
         running = false;
         executor_state_changed(state = executor_state::Idle);
     }
+
+    void plexa::tick()
+    {
+    }
 } // namespace ratio::executor
