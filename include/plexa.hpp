@@ -41,13 +41,13 @@ namespace ratio::executor
      * @brief Returns a vector of const references to the executing atoms.
      *
      * This function returns a vector containing const references to the atoms that are currently executing.
-     * The references are wrapped in `utils::ref_wrapper` to allow storing them in a vector.
+     * The references are wrapped in `std::reference_wrapper` to allow storing them in a vector.
      *
      * @return A vector of const references to the executing atoms.
      */
-    std::vector<utils::ref_wrapper<const riddle::atom_term>> get_executing_atoms() const noexcept
+    std::vector<std::reference_wrapper<const riddle::atom_term>> get_executing_atoms() const noexcept
     {
-      std::vector<utils::ref_wrapper<const riddle::atom_term>> atoms;
+      std::vector<std::reference_wrapper<const riddle::atom_term>> atoms;
       for (const auto &atm : executing)
         atoms.push_back(*atm);
       return atoms;
@@ -98,14 +98,14 @@ namespace ratio::executor
      *
      * @param atms The atoms that are starting.
      */
-    virtual void starting(const std::vector<utils::ref_wrapper<riddle::atom_term>> &) {}
+    virtual void starting(const std::vector<std::reference_wrapper<riddle::atom_term>> &) {}
 
     /**
      * @brief Called when the executor started some atoms.
      *
      * @param atms The atoms that are started.
      */
-    virtual void start(const std::vector<utils::ref_wrapper<riddle::atom_term>> &) {}
+    virtual void start(const std::vector<std::reference_wrapper<riddle::atom_term>> &) {}
 
     /**
      * @brief Called when the executor is ending some atoms.
@@ -114,14 +114,14 @@ namespace ratio::executor
      *
      * @param atms The atoms that are ending.
      */
-    virtual void ending(const std::vector<utils::ref_wrapper<riddle::atom_term>> &) {}
+    virtual void ending(const std::vector<std::reference_wrapper<riddle::atom_term>> &) {}
 
     /**
      * @brief Called when the executor ended some atoms.
      *
      * @param atms The atoms that ended.
      */
-    virtual void end(const std::vector<utils::ref_wrapper<riddle::atom_term>> &) {}
+    virtual void end(const std::vector<std::reference_wrapper<riddle::atom_term>> &) {}
 
   private:
     std::mutex mtx;                                                                                                      // the mutex for the critical sections..
