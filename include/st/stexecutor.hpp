@@ -13,5 +13,11 @@ namespace ratio::executor
     void adapt(const std::string &script) override;
 
     void failure(const std::unordered_set<const riddle::atom_term *> &atoms) override;
+
+  private:
+    void adapt() override;
+
+  private:
+    bool pending_requirements = false; // whether there are pending requirements to be solved or not..
   };
 } // namespace ratio::executor

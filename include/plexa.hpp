@@ -78,6 +78,14 @@ namespace ratio::executor
      */
     virtual void failure(const std::unordered_set<const riddle::atom_term *> &atoms) = 0;
 
+  protected:
+    void build_timelines(const riddle::core &cr);
+
+    void reset_executable_predicates(const riddle::core &cr);
+
+  private:
+    virtual void adapt() = 0;
+
   private:
     /**
      * @brief Called when the state of the executor changes.
@@ -123,10 +131,12 @@ namespace ratio::executor
      */
     virtual void end(const std::vector<std::reference_wrapper<riddle::atom_term>> &) {}
 
+  protected:
+    std::mutex mtx; // the mutex for the critical sections..
   private:
-    std::mutex mtx;                                                                                                      // the mutex for the critical sections..
     std::atomic<bool> running = false;                                                                                   // the running state..
     executor_state state = executor_state::Reasoning;                                                                    // the current state of the executor..
+    std::unordered_set<const riddle::predicate *> executable_predicates;                                                 // the set of executable (impulses and intervals) predicates..
     const utils::rational units_per_tick;                                                                                // the number of plan units for each tick..
     bool pending_requirements = false;                                                                                   // whether there are pending requirements to be solved or not..
     utils::rational current_time;                                                                                        // the current time in plan units..
