@@ -41,7 +41,6 @@ namespace ratio::executor
         if (!running)
             return; // if not running, do nothing..
 
-    manage_tick:
         while (!pulses.empty() && pulses.cbegin()->first <= current_time)
         {
             if (!pulses.cbegin()->second.first.empty())
@@ -61,6 +60,13 @@ namespace ratio::executor
         }
     }
 
+    void plexa::dont_start_yet(const std::unordered_map<riddle::atom_term *, utils::rational> &atoms)
+    {
+        for (auto &[atm, d] : atoms)
+            delay(std::dynamic_pointer_cast<riddle::arith_term>(atm->get_core().get_predicate(riddle::impulse_kw).is_assignable_from(atm->get_type()) ? atm->get("at") : atm->get("start")), d);
+    }
+    void plexa::dont_end_yet(const std::unordered_map<riddle::atom_term *, utils::rational> &atoms) { delay(std::dynamic_pointer_cast<riddle::arith_term>(atoms.begin()->first->get("end")), atoms.begin()->second); }
+
     void plexa::build_timelines(const riddle::core &cr)
     {
         LOG_DEBUG("Building timelines");
@@ -77,18 +83,18 @@ namespace ratio::executor
                         auto at = cr.arith_value(static_cast<riddle::arith_term &>(*atm->get("at")));
                         if (at < current_time)
                             continue; // this atom is already in the past..
-                        pulses[at].first.emplace_back(atm.get());
-                        pulses[at].second.emplace_back(atm.get());
+                        pulses[at].first.emplace(atm.get());
+                        pulses[at].second.emplace(atm.get());
                     }
                     else
                     {
                         auto end = cr.arith_value(static_cast<riddle::arith_term &>(*atm->get("end")));
                         if (end < current_time)
                             continue; // this atom is already in the past..
-                        pulses[end].second.emplace_back(atm.get());
+                        pulses[end].second.emplace(atm.get());
                         auto start = cr.arith_value(static_cast<riddle::arith_term &>(*atm->get("start")));
                         if (start >= current_time)
-                            pulses[start].first.emplace_back(atm.get());
+                            pulses[start].first.emplace(atm.get());
                     }
                 }
     }

@@ -17,6 +17,8 @@ namespace ratio::executor
   private:
     void adapt() override;
 
+    void delay(riddle::arith_expr tp, const utils::rational &d) override;
+
   private:
     bool pending_requirements = false; // whether there are pending requirements to be solved or not..
   };

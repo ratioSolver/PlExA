@@ -1,4 +1,5 @@
 #include "stexecutor.hpp"
+#include "la_theory.hpp"
 #include "logging.hpp"
 
 namespace ratio::executor
@@ -20,4 +21,6 @@ namespace ratio::executor
     }
 
     void executor::adapt() { solve(); }
+
+    void executor::delay(riddle::arith_expr tp, const utils::rational &d) { get_linear_arithmetic_theory().new_lt(static_cast<riddle::arith_item &>(*tp).get_lin(), utils::lin(arith_value(*tp).get_rational() + d)); }
 } // namespace ratio::executor

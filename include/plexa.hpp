@@ -60,7 +60,7 @@ namespace ratio::executor
      *
      * @param atoms The set of atoms which are not yet ready to start and the corresponding delay time.
      */
-    void dont_start_yet(const std::unordered_map<const riddle::atom_term *, utils::rational> &atoms) { dont_start.insert(atoms.cbegin(), atoms.cend()); }
+    void dont_start_yet(const std::unordered_map<riddle::atom_term *, utils::rational> &atoms);
     /**
      * @brief Inserts the given atoms into the `dont_end` unordered map.
      *
@@ -68,7 +68,7 @@ namespace ratio::executor
      *
      * @param atoms The set of atoms which are not yet ready to end and the corresponding delay time.
      */
-    void dont_end_yet(const std::unordered_map<const riddle::atom_term *, utils::rational> &atoms) { dont_end.insert(atoms.cbegin(), atoms.cend()); }
+    void dont_end_yet(const std::unordered_map<riddle::atom_term *, utils::rational> &atoms);
     /**
      * @brief Notifies the executor that the given atoms have failed.
      *
@@ -85,6 +85,8 @@ namespace ratio::executor
 
   private:
     virtual void adapt() = 0;
+
+    virtual void delay(riddle::arith_expr tp, const utils::rational &d) = 0;
 
   private:
     /**
@@ -134,15 +136,13 @@ namespace ratio::executor
   protected:
     std::mutex mtx; // the mutex for the critical sections..
   private:
-    std::atomic<bool> running = false;                                                                                   // the running state..
-    executor_state state = executor_state::Reasoning;                                                                    // the current state of the executor..
-    std::unordered_set<const riddle::predicate *> executable_predicates;                                                 // the set of executable (impulses and intervals) predicates..
-    const utils::rational units_per_tick;                                                                                // the number of plan units for each tick..
-    bool pending_requirements = false;                                                                                   // whether there are pending requirements to be solved or not..
-    utils::rational current_time;                                                                                        // the current time in plan units..
-    std::unordered_set<const riddle::atom_term *> executing;                                                             // the atoms that are currently executing..
-    std::unordered_map<const riddle::atom_term *, utils::rational> dont_start;                                           // the starting atoms which are not yet ready to start..
-    std::unordered_map<const riddle::atom_term *, utils::rational> dont_end;                                             // the ending atoms which are not yet ready to end..
-    std::map<utils::inf_rational, std::pair<std::vector<riddle::atom_term *>, std::vector<riddle::atom_term *>>> pulses; // the pulses of the executor, with the starting and ending atoms..
+    std::atomic<bool> running = false;                                                                                                 // the running state..
+    executor_state state = executor_state::Reasoning;                                                                                  // the current state of the executor..
+    std::unordered_set<const riddle::predicate *> executable_predicates;                                                               // the set of executable (impulses and intervals) predicates..
+    const utils::rational units_per_tick;                                                                                              // the number of plan units for each tick..
+    bool pending_requirements = false;                                                                                                 // whether there are pending requirements to be solved or not..
+    utils::rational current_time;                                                                                                      // the current time in plan units..
+    std::unordered_set<const riddle::atom_term *> executing;                                                                           // the atoms that are currently executing..
+    std::map<utils::inf_rational, std::pair<std::unordered_set<riddle::atom_term *>, std::unordered_set<riddle::atom_term *>>> pulses; // the pulses of the executor, with the starting and ending atoms..
   };
 } // namespace ratio::executor
