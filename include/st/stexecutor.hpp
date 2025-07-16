@@ -15,6 +15,9 @@ namespace ratio::executor
     void dont_start_yet(const std::unordered_map<riddle::atom_term *, utils::rational> &atoms) override;
     void dont_end_yet(const std::unordered_map<riddle::atom_term *, utils::rational> &atoms) override;
 
+    void freeze_start(const std::vector<std::reference_wrapper<riddle::atom_term>> &atoms) override;
+    void freeze_end(const std::vector<std::reference_wrapper<riddle::atom_term>> &atoms) override;
+
     void failure(const std::unordered_set<const riddle::atom_term *> &atoms) override;
 
   private:

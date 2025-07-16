@@ -89,6 +89,10 @@ namespace ratio::executor
     void reset_executable_predicates(const riddle::core &cr);
 
   private:
+    virtual void freeze_start(const std::vector<std::reference_wrapper<riddle::atom_term>> &) = 0;
+    virtual void freeze_end(const std::vector<std::reference_wrapper<riddle::atom_term>> &) = 0;
+
+  private:
     /**
      * @brief Called when the state of the executor changes.
      */

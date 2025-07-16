@@ -32,6 +32,7 @@ namespace ratio::executor
             }
             catch (const std::exception &e)
             { // adaptation failed..
+                LOG_ERR("Adaptation failed: " << e.what());
                 executor_state_changed(state = executor_state::Failed);
                 return;
             }
@@ -57,7 +58,59 @@ namespace ratio::executor
                     atms.emplace_back(*atm);
                 ending(atms);
             }
+
+            try
+            { // we propagate and remove new possible flaws..
+                gr.solve();
+            }
+            catch (const std::exception &e)
+            { // propagation failed..
+                LOG_ERR("Propagation failed: " << e.what());
+                executor_state_changed(state = executor_state::Failed);
+                return;
+            }
+
+            if (!pulses.cbegin()->second.first.empty())
+            {
+                std::vector<std::reference_wrapper<riddle::atom_term>> atms;
+                for (const auto &atm : pulses.cbegin()->second.first)
+                {
+                    atms.emplace_back(*atm);
+                    executing.emplace(atm); // we add the starting atoms to the set of executing atoms..
+                }
+                // we freeze the starting atoms..
+                freeze_start(atms);
+                // we start the atoms..
+                start(atms);
+            }
+            if (!pulses.cbegin()->second.second.empty())
+            {
+                std::vector<std::reference_wrapper<riddle::atom_term>> atms;
+                for (const auto &atm : pulses.cbegin()->second.second)
+                {
+                    atms.emplace_back(*atm);
+                    executing.erase(atm); // we remove the ending atoms from the set of executing atoms..
+                }
+                // we freeze the ending atoms..
+                freeze_end(atms);
+                // we end the atoms..
+                end(atms);
+            }
+
+            // we remove the pulse from the map..
+            pulses.erase(pulses.cbegin());
         }
+
+        if (gr.arith_value(static_cast<riddle::arith_term &>(*gr.get(horizon_kw))) <= current_time && pulses.empty())
+        { // we reached the horizon, we stop the executor..
+            running = false;
+            executor_state_changed(state = executor_state::Finished);
+            return;
+        }
+
+        // we increment the current time..
+        current_time += units_per_tick;
+        tick(current_time);
     }
 
     void plexa::build_timelines(const riddle::core &cr)
