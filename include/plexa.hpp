@@ -8,6 +8,11 @@
 #include <unordered_map>
 #include <map>
 
+namespace ratio
+{
+  class graph;
+} // namespace ratio
+
 namespace ratio::executor
 {
   enum executor_state
@@ -35,7 +40,7 @@ namespace ratio::executor
     void start();
     void pause();
 
-    void tick();
+    void tick(ratio::graph &gr);
 
     /**
      * @brief Returns a vector of const references to the executing atoms.
@@ -60,7 +65,7 @@ namespace ratio::executor
      *
      * @param atoms The set of atoms which are not yet ready to start and the corresponding delay time.
      */
-    void dont_start_yet(const std::unordered_map<riddle::atom_term *, utils::rational> &atoms);
+    virtual void dont_start_yet(const std::unordered_map<riddle::atom_term *, utils::rational> &atoms) = 0;
     /**
      * @brief Inserts the given atoms into the `dont_end` unordered map.
      *
@@ -68,7 +73,7 @@ namespace ratio::executor
      *
      * @param atoms The set of atoms which are not yet ready to end and the corresponding delay time.
      */
-    void dont_end_yet(const std::unordered_map<riddle::atom_term *, utils::rational> &atoms);
+    virtual void dont_end_yet(const std::unordered_map<riddle::atom_term *, utils::rational> &atoms) = 0;
     /**
      * @brief Notifies the executor that the given atoms have failed.
      *
@@ -82,11 +87,6 @@ namespace ratio::executor
     void build_timelines(const riddle::core &cr);
 
     void reset_executable_predicates(const riddle::core &cr);
-
-  private:
-    virtual void adapt() = 0;
-
-    virtual void delay(riddle::arith_expr tp, const utils::rational &d) = 0;
 
   private:
     /**

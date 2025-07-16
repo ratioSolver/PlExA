@@ -1,5 +1,5 @@
 #include "plexa.hpp"
-#include "core.hpp"
+#include "graph.hpp"
 #include "logging.hpp"
 #include <queue>
 #include <cassert>
@@ -20,7 +20,7 @@ namespace ratio::executor
         executor_state_changed(state = executor_state::Idle);
     }
 
-    void plexa::tick()
+    void plexa::tick(ratio::graph &gr)
     {
         const std::lock_guard<std::mutex> lock(mtx);
         if (pending_requirements)
@@ -28,7 +28,7 @@ namespace ratio::executor
             executor_state_changed(state = running ? executor_state::Adapting : executor_state::Reasoning);
             try
             { // we solve the problem..
-                adapt();
+                gr.solve();
             }
             catch (const std::exception &e)
             { // adaptation failed..
@@ -59,13 +59,6 @@ namespace ratio::executor
             }
         }
     }
-
-    void plexa::dont_start_yet(const std::unordered_map<riddle::atom_term *, utils::rational> &atoms)
-    {
-        for (auto &[atm, d] : atoms)
-            delay(std::dynamic_pointer_cast<riddle::arith_term>(atm->get_core().get_predicate(riddle::impulse_kw).is_assignable_from(atm->get_type()) ? atm->get("at") : atm->get("start")), d);
-    }
-    void plexa::dont_end_yet(const std::unordered_map<riddle::atom_term *, utils::rational> &atoms) { delay(std::dynamic_pointer_cast<riddle::arith_term>(atoms.begin()->first->get("end")), atoms.begin()->second); }
 
     void plexa::build_timelines(const riddle::core &cr)
     {

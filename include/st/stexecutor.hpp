@@ -12,12 +12,10 @@ namespace ratio::executor
 
     void adapt(const std::string &script) override;
 
+    void dont_start_yet(const std::unordered_map<riddle::atom_term *, utils::rational> &atoms) override;
+    void dont_end_yet(const std::unordered_map<riddle::atom_term *, utils::rational> &atoms) override;
+
     void failure(const std::unordered_set<const riddle::atom_term *> &atoms) override;
-
-  private:
-    void adapt() override;
-
-    void delay(riddle::arith_expr tp, const utils::rational &d) override;
 
   private:
     bool pending_requirements = false; // whether there are pending requirements to be solved or not..
