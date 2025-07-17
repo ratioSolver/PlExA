@@ -22,6 +22,7 @@ namespace ratio::executor
 
     void plexa::tick(ratio::graph &gr)
     {
+        LOG_DEBUG("[" + gr.get_name() + "] current time: " << to_string(current_time));
         const std::lock_guard<std::mutex> lock(mtx);
         if (pending_requirements)
         {
