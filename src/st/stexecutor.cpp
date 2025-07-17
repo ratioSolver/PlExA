@@ -5,7 +5,7 @@
 
 namespace ratio::executor
 {
-    executor::executor(std::string_view name, const utils::rational &units_per_tick) noexcept : ratio::solver(name), plexa(units_per_tick) {}
+    executor::executor(std::string_view name, const utils::rational &units_per_tick) noexcept : solver(name), theory(static_cast<smt::semitone &>(*this)), plexa(units_per_tick) {}
 
     void executor::adapt(const std::string &script)
     {
@@ -46,24 +46,28 @@ namespace ratio::executor
         for (const auto &atm : atoms)
         {
             assert(atm.get().get_state() == riddle::atom_state::active);
+            auto v = variable(static_cast<riddle::atom &>(atm.get()).get_sigma());
+            bind(v); // we bind the sigma variable to the theory..
             for (auto &[name, par] : atm.get().get_items())
                 if (name != riddle::duration_kw && name != riddle::end_kw)
                 {
                     if (auto b_par = dynamic_cast<riddle::bool_item *>(par.get()))
                     {
                         auto b_val = bool_value(*b_par);
+                        adaptations[v].emplace_back(std::make_unique<bool_adaptation>(static_cast<riddle::atom &>(atm.get()), *b_par, b_val));
                     }
                     else if (auto a_par = dynamic_cast<riddle::arith_item *>(par.get()))
                     {
                         auto a_val = arith_value(*a_par);
-                    }
-                    else if (auto s_par = dynamic_cast<riddle::string_item *>(par.get()))
-                    {
-                        auto s_val = string_value(*s_par);
+                        adaptations[v].emplace_back(std::make_unique<lb_adaption>(static_cast<riddle::atom &>(atm.get()), *a_par, a_val));
+                        adaptations[v].emplace_back(std::make_unique<ub_adaption>(static_cast<riddle::atom &>(atm.get()), *a_par, a_val));
                     }
                     else if (auto e_par = dynamic_cast<riddle::enum_item *>(par.get()))
                     {
                         auto e_val = enum_value(*e_par);
+                        assert(!e_val.empty());
+                        assert(e_val.size() == 1);
+                        adaptations[v].emplace_back(std::make_unique<var_adaptation>(static_cast<riddle::atom &>(atm.get()), *e_par, e_val.front().get()));
                     }
                 }
         }
@@ -73,11 +77,39 @@ namespace ratio::executor
         for (const auto &atm : atoms)
         {
             assert(atm.get().get_state() == riddle::atom_state::active);
+            auto v = variable(static_cast<riddle::atom &>(atm.get()).get_sigma());
+            bind(v); // we bind the sigma variable to the theory..
             if (get_type(riddle::interval_kw).is_assignable_from(atm.get().get_type()))
             {
-                auto a_par = std::dynamic_pointer_cast<riddle::arith_term>(atm.get().get(riddle::end_kw));
+                auto a_par = static_cast<riddle::arith_item *>(atm.get().get(riddle::end_kw).get());
                 auto a_val = arith_value(*a_par);
+                adaptations[v].emplace_back(std::make_unique<lb_adaption>(static_cast<riddle::atom &>(atm.get()), *a_par, a_val));
+                adaptations[v].emplace_back(std::make_unique<ub_adaption>(static_cast<riddle::atom &>(atm.get()), *a_par, a_val));
             }
         }
     }
+
+    bool executor::propagate(const utils::lit &p) noexcept
+    {
+        if (value(p) == utils::True)
+            for (const auto &adapt : adaptations[variable(p)])
+                if (auto ba = dynamic_cast<bool_adaptation *>(adapt.get()))
+                {
+                    if (bool_value(ba->bi) != ba->val)
+                        smt::theory::record({!ba->atm.get_sigma(), ba->val == utils::True ? ba->bi.get_lit() : !ba->bi.get_lit()});
+                }
+                else if (auto la = dynamic_cast<lb_adaption *>(adapt.get()))
+                {
+                }
+                else if (auto ua = dynamic_cast<ub_adaption *>(adapt.get()))
+                {
+                }
+                else if (auto va = dynamic_cast<var_adaptation *>(adapt.get()))
+                {
+                }
+        return true;
+    }
+    bool executor::check() noexcept { return true; }
+    void executor::push() noexcept {}
+    void executor::pop() noexcept {}
 } // namespace ratio::executor
