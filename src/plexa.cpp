@@ -102,7 +102,7 @@ namespace ratio::executor
             pulses.erase(pulses.cbegin());
         }
 
-        if (gr.arith_value(static_cast<riddle::arith_term &>(*gr.get(horizon_kw))) <= current_time && pulses.empty())
+        if (gr.arith_value(*gr.env::get<riddle::arith_term>(horizon_kw)) <= current_time && pulses.empty())
         { // we reached the horizon, we stop the executor..
             running = false;
             executor_state_changed(state = executor_state::Finished);
@@ -127,7 +127,7 @@ namespace ratio::executor
                     assert(cr.get_predicate(riddle::interval_kw).is_assignable_from(*pred) || cr.get_predicate(riddle::impulse_kw).is_assignable_from(*pred));
                     if (cr.get_predicate(riddle::impulse_kw).is_assignable_from(*pred))
                     {
-                        auto at = cr.arith_value(static_cast<riddle::arith_term &>(*atm->get("at")));
+                        auto at = cr.arith_value(*atm->get<riddle::arith_term>(riddle::at_kw));
                         if (at < current_time)
                             continue; // this atom is already in the past..
                         pulses[at].first.emplace(atm.get());
@@ -135,11 +135,11 @@ namespace ratio::executor
                     }
                     else
                     {
-                        auto end = cr.arith_value(static_cast<riddle::arith_term &>(*atm->get("end")));
+                        auto end = cr.arith_value(*atm->get<riddle::arith_term>(riddle::end_kw));
                         if (end < current_time)
                             continue; // this atom is already in the past..
                         pulses[end].second.emplace(atm.get());
-                        auto start = cr.arith_value(static_cast<riddle::arith_term &>(*atm->get("start")));
+                        auto start = cr.arith_value(*atm->get<riddle::arith_term>(riddle::start_kw));
                         if (start >= current_time)
                             pulses[start].first.emplace(atm.get());
                     }
