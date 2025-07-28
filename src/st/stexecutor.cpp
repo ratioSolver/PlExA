@@ -52,10 +52,7 @@ namespace ratio::executor
                 if (name != riddle::duration_kw && name != riddle::end_kw)
                 {
                     if (auto b_par = dynamic_cast<riddle::bool_item *>(par.get()))
-                    {
-                        auto b_val = bool_value(*b_par);
-                        adaptations[v].emplace_back(std::make_unique<bool_adaptation>(static_cast<riddle::atom &>(atm.get()), *b_par, b_val));
-                    }
+                        adaptations[v].emplace_back(std::make_unique<bool_adaptation>(static_cast<riddle::atom &>(atm.get()), *b_par, bool_value(*b_par)));
                     else if (auto a_par = dynamic_cast<riddle::arith_item *>(par.get()))
                     {
                         auto a_val = arith_value(*a_par);
@@ -93,20 +90,23 @@ namespace ratio::executor
     {
         if (value(p) == utils::True)
             for (const auto &adapt : adaptations[variable(p)])
+            {
                 if (auto ba = dynamic_cast<bool_adaptation *>(adapt.get()))
                 {
-                    if (bool_value(ba->bi) != ba->val)
+                    if (bool_value(ba->bi) != ba->val) // if the value of the boolean item is not the same as the value of the adaptation we record the adaptation
                         smt::theory::record({!ba->atm.get_sigma(), ba->val == utils::True ? ba->bi.get_lit() : !ba->bi.get_lit()});
                 }
-                else if (auto la = dynamic_cast<lb_adaption *>(adapt.get()))
-                {
-                }
-                else if (auto ua = dynamic_cast<ub_adaption *>(adapt.get()))
-                {
-                }
+                else if (auto la = dynamic_cast<lb_adaption *>(adapt.get())) // if the adaptation is a lower bound adaptation we record the adaptation
+                    add_le(utils::lin(la->lb.get_rational()), la->ai.get_lin(), la->atm.get_sigma());
+                else if (auto ua = dynamic_cast<ub_adaption *>(adapt.get())) // if the adaptation is an upper bound adaptation we record the adaptation
+                    add_ge(utils::lin(ua->ub.get_rational()), ua->ai.get_lin(), ua->atm.get_sigma());
                 else if (auto va = dynamic_cast<var_adaptation *>(adapt.get()))
-                {
+                { // if the adaptation is a variable adaptation we record the adaptation
+                    for (const auto &val : va->ei.get_values())
+                        if (&val.get() != &va->val && value(va->ei.get_lit(val.get())) != utils::False)
+                            smt::theory::record({!va->atm.get_sigma(), !va->ei.get_lit(val.get())});
                 }
+            }
         return true;
     }
     bool executor::check() noexcept { return true; }
